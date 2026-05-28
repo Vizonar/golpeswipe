@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GolpeSwipe</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="app">
+    <section id="tela-inicial" class="tela ativa">
+      <div class="hero">
+        <p class="tag">Educação digital interativa</p>
+        <h1>GolpeSwipe</h1>
+        <p class="descricao">
+          Analise cenários simulados de golpes digitais e decida se cada situação é golpe ou não é golpe.
+          A cada resposta, você recebe uma explicação educativa.
+        </p>
+        <button id="btn-comecar" class="btn primario">Começar desafio</button>
+      </div>
+    </section>
+
+    <section id="tela-jogo" class="tela">
+      <header class="topo-jogo">
+        <div>
+          <strong>GolpeSwipe</strong>
+          <span id="contador">Card 1 de 20</span>
+        </div>
+        <div class="placar">Pontuação: <span id="pontuacao">0</span></div>
+      </header>
+
+      <div class="barra-progresso">
+        <div id="progresso"></div>
+      </div>
+
+      <article id="card" class="card">
+        <p id="categoria" class="categoria"></p>
+        <h2 id="titulo-card"></h2>
+        <p id="cenario-card" class="cenario"></p>
+        <p class="pergunta">Considerando esse cenário, é golpe ou não é golpe?</p>
+      </article>
+
+      <div class="botoes-resposta">
+        <button id="btn-golpe" class="btn golpe">← É golpe</button>
+        <button id="btn-seguro" class="btn seguro">Não é golpe →</button>
+      </div>
+
+      <p class="atalho">Dica: use ← para golpe e → para não é golpe.</p>
+    </section>
+
+    <section id="tela-feedback" class="tela">
+      <div id="caixa-feedback" class="feedback">
+        <p id="status-feedback" class="status"></p>
+        <h2 id="titulo-feedback"></h2>
+        <p id="texto-feedback"></p>
+
+        <div class="bloco-info">
+          <h3>Sinais observados</h3>
+          <ul id="lista-sinais"></ul>
+        </div>
+
+        <div class="bloco-info">
+          <h3>Dica preventiva</h3>
+          <p id="dica-feedback"></p>
+        </div>
+
+        <button id="btn-proximo" class="btn primario">Próximo card</button>
+      </div>
+    </section>
+
+    <section id="tela-final" class="tela">
+      <div class="resultado">
+        <p class="tag">Resultado final</p>
+        <h2>Desafio concluído!</h2>
+        <p id="resultado-texto"></p>
+        <div class="resultado-numero"><span id="acertos-final">0</span>/20</div>
+        <p id="mensagem-final"></p>
+        <button id="btn-reiniciar" class="btn primario">Jogar novamente</button>
+      </div>
+    </section>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
