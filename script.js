@@ -1,120 +1,518 @@
-const cards = [
-  {cat:'WhatsApp', titulo:'Pedido urgente de Pix por número desconhecido', cenario:'Você recebe no WhatsApp, de um número desconhecido: “Oi filha, troquei de número. Preciso de um Pix urgente, depois te explico.”', correta:'golpe', sinais:['Número desconhecido','Pedido urgente de Pix','Tentativa de se passar por familiar','Falta de explicação clara'], dica:'Confirme por ligação ou por outro canal antes de enviar dinheiro.', ok:'Correto! O cenário apresenta sinais comuns de golpe de falsa identidade.', erro:'Atenção! Era golpe. A pessoa usa número novo, urgência e pedido de dinheiro para pressionar a vítima.'},
-  {cat:'Banco', titulo:'Verificação pelo aplicativo oficial', cenario:'Você recebe um aviso de segurança. Em vez de clicar em link, abre o aplicativo oficial do banco já instalado e confere a informação dentro dele.', correta:'seguro', sinais:['Uso do app oficial','Sem clique em link externo','Sem envio de senha','Verificação manual'], dica:'Sempre acesse banco pelo aplicativo oficial ou pelo endereço digitado manualmente.', ok:'Correto! Essa é uma atitude segura.', erro:'Atenção! Não era golpe. A ação segura foi verificar diretamente no aplicativo oficial.'},
-  {cat:'SMS', titulo:'Falso bloqueio de conta bancária', cenario:'Você recebe SMS: “Sua conta será bloqueada hoje. Acesse o link abaixo e confirme seus dados para evitar o bloqueio.” O link não parece oficial.', correta:'golpe', sinais:['Ameaça de bloqueio','Link suspeito','Pedido de dados','Urgência exagerada'], dica:'Não confirme dados bancários por SMS. Abra o app oficial do banco.', ok:'Correto! A mensagem usa medo e urgência para levar ao clique.', erro:'Atenção! Era golpe. Bancos não pedem confirmação de dados por link suspeito enviado por SMS.'},
-  {cat:'Pix', titulo:'Conferência antes de pagar Pix', cenario:'Em uma loja física, antes de confirmar um Pix, você confere nome da empresa, CNPJ, banco e valor na tela do aplicativo. Tudo bate com a loja.', correta:'seguro', sinais:['Recebedor conferido','Valor correto','CNPJ compatível','Sem pressão suspeita'], dica:'Antes de confirmar Pix, confira sempre os dados do recebedor.', ok:'Correto! Conferir os dados antes do pagamento é uma prática segura.', erro:'Atenção! Não era golpe. O usuário validou os dados antes de pagar.'},
-  {cat:'Pix', titulo:'Pix de verificação', cenario:'Um suposto atendente diz pelo WhatsApp que houve compra suspeita no cartão e pede um “Pix de verificação”, prometendo estorno automático.', correta:'golpe', sinais:['Pedido de Pix para cancelar compra','Promessa de estorno','Contato fora do canal oficial','Pressão para resolver rápido'], dica:'Instituições não pedem Pix para cancelar compra ou validar conta.', ok:'Correto! “Pix de verificação” é forte sinal de golpe.', erro:'Atenção! Era golpe. Não existe necessidade de enviar Pix para cancelar compra.'},
-  {cat:'Entrega', titulo:'Rastreamento pelo site oficial', cenario:'Você recebe e-mail sobre uma encomenda. Como esperava uma compra, não clica no link e acessa o site oficial da loja para ver o rastreio.', correta:'seguro', sinais:['Compra esperada','Acesso pelo site oficial','Sem pagamento por link','Verificação dentro da conta'], dica:'Consulte entregas no site oficial da loja ou transportadora.', ok:'Correto! A verificação foi feita por canal confiável.', erro:'Atenção! Não era golpe. A atitude foi segura porque evitou o link do e-mail.'},
-  {cat:'Entrega', titulo:'Taxa inesperada para liberar encomenda', cenario:'Você recebe e-mail dizendo que uma encomenda está retida e precisa pagar uma taxa por link, mas não lembra de ter comprado nada.', correta:'golpe', sinais:['Cobrança inesperada','Link por e-mail','Compra não reconhecida','Taxa pequena para parecer normal'], dica:'Verifique rastreios apenas em canais oficiais.', ok:'Correto! Cobrança inesperada por link é suspeita.', erro:'Atenção! Era golpe. Falsas entregas são usadas para roubar dados e dinheiro.'},
-  {cat:'WhatsApp', titulo:'Confirmação por ligação antes de enviar dinheiro', cenario:'Um familiar pede dinheiro por mensagem. Você desconfia, liga para o número antigo dele e confirma que o pedido era falso antes de fazer qualquer Pix.', correta:'seguro', sinais:['Desconfiança saudável','Confirmação por ligação','Sem pagamento imediato','Verificação independente'], dica:'Pedidos urgentes de dinheiro devem ser confirmados por outro canal.', ok:'Correto! A atitude segura evitou o golpe.', erro:'Atenção! Não era golpe no sentido da sua atitude: você confirmou e não enviou dinheiro.'},
-  {cat:'QR Code', titulo:'QR Code colado por cima do original', cenario:'Em um restaurante, um QR Code parece colado por cima do cardápio. Ao escanear, ele pede cadastro completo e dados do cartão para mostrar o menu.', correta:'golpe', sinais:['QR Code adulterado','Pedido de dados excessivos','Dados de cartão sem necessidade','Local improvisado'], dica:'Peça confirmação ao estabelecimento antes de acessar QR Codes suspeitos.', ok:'Correto! QR Code adulterado pode levar a páginas falsas.', erro:'Atenção! Era golpe. Cardápio não precisa pedir cartão ou dados completos.'},
-  {cat:'QR Code', titulo:'QR Code confirmado no caixa', cenario:'Você vai pagar por QR Code em uma loja. O código está no caixa, o atendente confirma, e o app mostra o nome e CNPJ corretos antes do pagamento.', correta:'seguro', sinais:['QR Code no local correto','Atendente confirmou','CNPJ correto','Valor compatível'], dica:'Mesmo em QR Codes legítimos, confira recebedor e valor antes de pagar.', ok:'Correto! A situação não apresenta sinais fortes de fraude.', erro:'Atenção! Não era golpe. Houve conferência do recebedor e confirmação no local.'},
-  {cat:'Redes sociais', titulo:'Promoção boa demais para ser verdade', cenario:'Você vê anúncio de tênis caro com 90% de desconto em perfil recém-criado. O link leva para uma loja desconhecida e só aceita Pix.', correta:'golpe', sinais:['Desconto exagerado','Perfil novo','Loja desconhecida','Pagamento somente por Pix'], dica:'Pesquise reputação da loja e desconfie de promoções irreais.', ok:'Correto! Promoções exageradas podem esconder lojas falsas.', erro:'Atenção! Era golpe. Preço muito abaixo do normal e Pix como única forma de pagamento são sinais de alerta.'},
-  {cat:'Redes sociais', titulo:'Promoção verificada no site oficial', cenario:'Você vê uma promoção em rede social, mas não compra pelo anúncio. Entra no site oficial da loja digitando o endereço e encontra a mesma promoção.', correta:'seguro', sinais:['Verificação no site oficial','Promoção compatível','Sem compra por link duvidoso','Canal confiável'], dica:'Quando vir promoção em anúncio, confirme no site oficial.', ok:'Correto! Verificar no canal oficial reduz riscos.', erro:'Atenção! Não era golpe. A compra foi validada pelo site oficial.'},
-  {cat:'WhatsApp', titulo:'Código de confirmação solicitado por desconhecido', cenario:'Uma pessoa diz que enviou um código para seu celular por engano e pede que você mande o número recebido por SMS.', correta:'golpe', sinais:['Pedido de código','Contato desconhecido','História de engano','Risco de invasão de conta'], dica:'Nunca compartilhe códigos recebidos por SMS, e-mail ou aplicativo.', ok:'Correto! Códigos podem permitir invasão de contas.', erro:'Atenção! Era golpe. O código pode ser usado para ativar sua conta em outro aparelho.'},
-  {cat:'Segurança', titulo:'Ativação de autenticação em dois fatores', cenario:'Você entra nas configurações do seu e-mail pelo site oficial e ativa autenticação em dois fatores, sem compartilhar códigos com ninguém.', correta:'seguro', sinais:['Acesso pelo site oficial','Reforço de segurança','Sem compartilhar código','Configuração voluntária'], dica:'Ative 2FA em e-mail, redes sociais e bancos sempre que possível.', ok:'Correto! Essa prática aumenta a proteção da conta.', erro:'Atenção! Não era golpe. Ativar autenticação em dois fatores por canal oficial é uma medida segura.'},
-  {cat:'Boleto', titulo:'Boleto recebido por e-mail estranho', cenario:'Você recebe boleto por e-mail de uma cobrança que não reconhece. O remetente é estranho e o beneficiário não tem relação com a empresa citada.', correta:'golpe', sinais:['Cobrança desconhecida','Remetente estranho','Beneficiário incompatível','Pressão para pagar'], dica:'Gere boletos apenas pelo site ou app oficial da empresa.', ok:'Correto! Boleto falso é golpe comum.', erro:'Atenção! Era golpe. O beneficiário incompatível indica risco de pagamento para criminoso.'},
-  {cat:'Boleto', titulo:'Boleto gerado no aplicativo oficial', cenario:'Você precisa pagar a fatura. Abre o aplicativo oficial da empresa, gera o boleto por lá e confere o beneficiário antes de pagar.', correta:'seguro', sinais:['Uso do app oficial','Beneficiário conferido','Cobrança esperada','Sem link externo'], dica:'Prefira gerar boletos dentro do app ou site oficial.', ok:'Correto! Essa é uma forma segura de pagar.', erro:'Atenção! Não era golpe. O boleto foi gerado e conferido no canal oficial.'},
-  {cat:'Investimento', titulo:'Investimento com lucro garantido', cenario:'Um perfil promete investimento com retorno de 30% ao mês, sem risco, com vagas limitadas e pagamento inicial por Pix.', correta:'golpe', sinais:['Lucro garantido','Retorno alto e rápido','Sem risco','Pressão por vaga limitada'], dica:'Desconfie de lucro fácil e pesquise a instituição.', ok:'Correto! Promessa de lucro alto sem risco é sinal clássico de golpe.', erro:'Atenção! Era golpe. Investimentos reais envolvem risco e não prometem retorno garantido assim.'},
-  {cat:'Marketplace', titulo:'Comprovante falso de pagamento', cenario:'Você vende um produto usado. O comprador envia print de comprovante Pix e insiste para retirar o produto, mas o dinheiro não caiu na sua conta.', correta:'golpe', sinais:['Comprovante por imagem','Valor não recebido','Pressa para retirar','Pressão do comprador'], dica:'Só entregue o produto depois que o dinheiro aparecer na conta.', ok:'Correto! Prints podem ser falsificados.', erro:'Atenção! Era golpe. Confie no saldo da conta, não apenas em comprovante enviado.'},
-  {cat:'Marketplace', titulo:'Entrega após dinheiro cair na conta', cenario:'Você vende um produto. O comprador envia Pix, mas você só entrega depois de abrir o app do banco e confirmar que o dinheiro entrou.', correta:'seguro', sinais:['Pagamento conferido no banco','Sem confiar só em print','Entrega após confirmação','Sem pressão aceita'], dica:'Em vendas online, confirme o recebimento no banco antes de entregar.', ok:'Correto! A atitude foi segura.', erro:'Atenção! Não era golpe. O vendedor verificou o pagamento antes da entrega.'},
-  {cat:'Suporte falso', titulo:'Aplicativo de acesso remoto por telefone', cenario:'Alguém liga dizendo ser do suporte e afirma que seu celular está infectado. A pessoa pede para instalar um aplicativo de acesso remoto.', correta:'golpe', sinais:['Ligação inesperada','Medo de infecção','Pedido para instalar app','Acesso remoto'], dica:'Nunca instale apps indicados por desconhecidos em ligações.', ok:'Correto! Acesso remoto pode dar controle do aparelho ao golpista.', erro:'Atenção! Era golpe. Suportes falsos usam medo para fazer a vítima instalar programas perigosos.'}
-];
+// ==========================================================
+// GOLPESWIPE EMPRESAS - FASE 1
+// Autenticação, cadastro de empresa, cadastro de funcionário
+// e navegação entre telas.
+// ==========================================================
 
-let indiceAtual = 0;
-let pontuacao = 0;
-let bloqueado = false;
+// 1) CONFIGURE AQUI AS CREDENCIAIS DO SEU SUPABASE
+// Supabase > Project Settings > API
+const SUPABASE_URL = 'COLE_AQUI_A_URL_DO_SUPABASE';
+const SUPABASE_ANON_KEY = 'COLE_AQUI_A_ANON_KEY_DO_SUPABASE';
 
-const telas = {
-  inicial: document.getElementById('tela-inicial'),
-  jogo: document.getElementById('tela-jogo'),
-  feedback: document.getElementById('tela-feedback'),
-  final: document.getElementById('tela-final')
+const supabaseConfigurado =
+  SUPABASE_URL !== 'COLE_AQUI_A_URL_DO_SUPABASE' &&
+  SUPABASE_ANON_KEY !== 'COLE_AQUI_A_ANON_KEY_DO_SUPABASE';
+
+const supabaseClient = supabaseConfigurado
+  ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+  : null;
+
+// Estado global simples
+const appState = {
+  user: null,
+  perfil: null,
+  empresa: null,
 };
 
-function trocarTela(nome) {
-  Object.values(telas).forEach(tela => tela.classList.remove('ativa'));
-  telas[nome].classList.add('ativa');
+// Helpers de DOM
+const $ = (selector) => document.querySelector(selector);
+const $$ = (selector) => document.querySelectorAll(selector);
+
+function showToast(message, type = 'success') {
+  const toast = $('#toast');
+  if (!toast) return;
+
+  toast.textContent = message;
+  toast.className = `toast show ${type}`;
+
+  setTimeout(() => {
+    toast.className = 'toast';
+  }, 3500);
 }
 
-function renderizarCard() {
-  const card = cards[indiceAtual];
-  bloqueado = false;
-  const total = cards.length;
-  document.getElementById('categoria').textContent = card.cat;
-  document.getElementById('titulo-card').textContent = card.titulo;
-  document.getElementById('cenario-card').textContent = card.cenario;
-  document.getElementById('contador').textContent = `Card ${indiceAtual + 1} de ${total}`;
-  document.getElementById('pontuacao').textContent = pontuacao;
-  document.getElementById('progresso').style.width = `${(indiceAtual / total) * 100}%`;
-  const cardEl = document.getElementById('card');
-  cardEl.className = 'card';
+function setLoading(form, isLoading, text = 'Processando...') {
+  const button = form?.querySelector('button[type="submit"]');
+  if (!button) return;
+
+  if (isLoading) {
+    button.dataset.originalText = button.textContent;
+    button.textContent = text;
+    button.disabled = true;
+  } else {
+    button.textContent = button.dataset.originalText || button.textContent;
+    button.disabled = false;
+  }
 }
 
-function responder(resposta) {
-  if (bloqueado) return;
-  bloqueado = true;
-  const card = cards[indiceAtual];
-  const acertou = resposta === card.correta;
-  const cardEl = document.getElementById('card');
-  cardEl.classList.add(resposta === 'golpe' ? 'sair-esquerda' : 'sair-direita');
-  setTimeout(() => mostrarFeedback(card, acertou), 280);
+function normalizarCodigoEmpresa(codigo) {
+  return String(codigo || '')
+    .trim()
+    .toUpperCase()
+    .replace(/\s+/g, '');
 }
 
-function mostrarFeedback(card, acertou) {
-  if (acertou) pontuacao++;
-  const status = document.getElementById('status-feedback');
-  status.textContent = acertou ? 'Resposta correta' : 'Resposta incorreta';
-  status.className = acertou ? 'status acerto' : 'status erro';
-  document.getElementById('titulo-feedback').textContent = acertou ? 'Você acertou!' : `Você errou: essa situação ${card.correta === 'golpe' ? 'era golpe' : 'não era golpe'}.`;
-  document.getElementById('texto-feedback').textContent = acertou ? card.ok : card.erro;
-  document.getElementById('dica-feedback').textContent = card.dica;
-  const lista = document.getElementById('lista-sinais');
-  lista.innerHTML = '';
-  card.sinais.forEach(sinal => {
-    const li = document.createElement('li');
-    li.textContent = sinal;
-    lista.appendChild(li);
+function showView(viewName) {
+  $$('.view').forEach((view) => view.classList.remove('active'));
+  const target = $(`#view-${viewName}`);
+
+  if (!target) {
+    console.warn(`Tela não encontrada: ${viewName}`);
+    return;
+  }
+
+  target.classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function atualizarNav() {
+  const nav = $('#main-nav');
+  if (!nav) return;
+
+  const logado = Boolean(appState.user && appState.perfil);
+  nav.classList.toggle('hidden', !logado);
+
+  const isAdmin = appState.perfil?.tipo_usuario === 'admin_empresa';
+  const isFuncionario = appState.perfil?.tipo_usuario === 'funcionario';
+
+  $$('.nav-admin').forEach((el) => el.classList.toggle('hidden', !isAdmin));
+  $$('.nav-funcionario').forEach((el) => el.classList.toggle('hidden', !(isFuncionario || isAdmin)));
+}
+
+function irParaDashboardCorreto() {
+  atualizarNav();
+
+  if (!appState.perfil) {
+    showView('home');
+    return;
+  }
+
+  if (appState.perfil.tipo_usuario === 'admin_empresa') {
+    preencherDashboardEmpresa();
+    showView('dashboard-empresa');
+    return;
+  }
+
+  preencherDashboardFuncionario();
+  showView('dashboard-funcionario');
+}
+
+async function carregarEmpresa(empresaId) {
+  if (!supabaseClient || !empresaId) return null;
+
+  const { data, error } = await supabaseClient
+    .from('empresas')
+    .select('*')
+    .eq('id', empresaId)
+    .single();
+
+  if (error) {
+    console.error('Erro ao carregar empresa:', error);
+    return null;
+  }
+
+  return data;
+}
+
+async function carregarPerfil(userId) {
+  if (!supabaseClient || !userId) return null;
+
+  const { data, error } = await supabaseClient
+    .from('perfis')
+    .select('*')
+    .eq('id', userId)
+    .single();
+
+  if (error) {
+    console.error('Erro ao carregar perfil:', error);
+    return null;
+  }
+
+  return data;
+}
+
+async function carregarSessaoAtual() {
+  if (!supabaseConfigurado) {
+    showToast('Configure SUPABASE_URL e SUPABASE_ANON_KEY no script.js.', 'error');
+    showView('home');
+    return;
+  }
+
+  const { data, error } = await supabaseClient.auth.getSession();
+
+  if (error) {
+    console.error(error);
+    showView('home');
+    return;
+  }
+
+  const session = data?.session;
+
+  if (!session?.user) {
+    appState.user = null;
+    appState.perfil = null;
+    appState.empresa = null;
+    atualizarNav();
+    showView('home');
+    return;
+  }
+
+  appState.user = session.user;
+  appState.perfil = await carregarPerfil(session.user.id);
+  appState.empresa = await carregarEmpresa(appState.perfil?.empresa_id);
+
+  if (!appState.perfil) {
+    showToast('Usuário autenticado, mas perfil não encontrado.', 'error');
+    showView('home');
+    return;
+  }
+
+  irParaDashboardCorreto();
+}
+
+function preencherDashboardFuncionario() {
+  const nome = appState.perfil?.nome || 'Funcionário';
+  const empresa = appState.empresa?.nome || 'empresa não identificada';
+
+  const boasVindas = $('#funcionario-boas-vindas');
+  const funcionarioEmpresa = $('#funcionario-empresa');
+
+  if (boasVindas) boasVindas.textContent = `Olá, ${nome}!`;
+  if (funcionarioEmpresa) funcionarioEmpresa.textContent = `Empresa vinculada: ${empresa}`;
+}
+
+async function preencherDashboardEmpresa() {
+  const empresaNome = $('#empresa-dashboard-nome');
+  const empresaCodigo = $('#empresa-dashboard-codigo');
+
+  if (empresaNome) empresaNome.textContent = appState.empresa?.nome || 'Empresa';
+  if (empresaCodigo) empresaCodigo.textContent = `Código da empresa: ${appState.empresa?.codigo_empresa || '-'}`;
+
+  await carregarResumoEmpresa();
+}
+
+async function carregarResumoEmpresa() {
+  if (!supabaseClient || !appState.empresa?.id) return;
+
+  const empresaId = appState.empresa.id;
+
+  const { count: funcionariosCount } = await supabaseClient
+    .from('perfis')
+    .select('*', { count: 'exact', head: true })
+    .eq('empresa_id', empresaId)
+    .eq('tipo_usuario', 'funcionario');
+
+  const { data: testes, error } = await supabaseClient
+    .from('testes_maestria')
+    .select('acertos,total_perguntas,percentual,nivel_resultado,finalizado_em,usuario_id')
+    .eq('empresa_id', empresaId)
+    .eq('finalizado', true)
+    .order('percentual', { ascending: false })
+    .limit(5);
+
+  if (error) {
+    console.error('Erro ao carregar resumo:', error);
+  }
+
+  const totalTestes = testes?.length || 0;
+  const media = totalTestes
+    ? Math.round(testes.reduce((sum, item) => sum + Number(item.percentual || 0), 0) / totalTestes)
+    : 0;
+
+  $('#stat-funcionarios').textContent = funcionariosCount || 0;
+  $('#stat-testes').textContent = totalTestes;
+  $('#stat-media').textContent = `${media}%`;
+
+  const rankingResumo = $('#ranking-resumo');
+  if (!rankingResumo) return;
+
+  if (!testes || testes.length === 0) {
+    rankingResumo.className = 'ranking-list empty-state';
+    rankingResumo.textContent = 'Nenhum teste finalizado ainda.';
+    return;
+  }
+
+  rankingResumo.className = 'ranking-list';
+  rankingResumo.innerHTML = testes
+    .map((teste, index) => `
+      <div class="review-item">
+        <strong>${index + 1}º lugar</strong><br />
+        ${teste.acertos}/${teste.total_perguntas} acertos • ${teste.percentual}% • ${teste.nivel_resultado || 'Sem nível'}
+      </div>
+    `)
+    .join('');
+}
+
+async function handleLogin(event) {
+  event.preventDefault();
+
+  if (!supabaseConfigurado) {
+    showToast('Configure o Supabase antes de fazer login.', 'error');
+    return;
+  }
+
+  const form = event.currentTarget;
+  setLoading(form, true, 'Entrando...');
+
+  try {
+    const email = $('#login-email').value.trim();
+    const password = $('#login-senha').value;
+
+    const { data, error } = await supabaseClient.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) throw error;
+
+    appState.user = data.user;
+    appState.perfil = await carregarPerfil(data.user.id);
+    appState.empresa = await carregarEmpresa(appState.perfil?.empresa_id);
+
+    if (!appState.perfil) {
+      throw new Error('Perfil não encontrado. Verifique se o cadastro foi concluído corretamente.');
+    }
+
+    showToast('Login realizado com sucesso.');
+    irParaDashboardCorreto();
+  } catch (error) {
+    console.error(error);
+    showToast(error.message || 'Erro ao fazer login.', 'error');
+  } finally {
+    setLoading(form, false);
+  }
+}
+
+async function handleCadastroEmpresa(event) {
+  event.preventDefault();
+
+  if (!supabaseConfigurado) {
+    showToast('Configure o Supabase antes de cadastrar.', 'error');
+    return;
+  }
+
+  const form = event.currentTarget;
+  setLoading(form, true, 'Cadastrando...');
+
+  try {
+    const nomeResponsavel = $('#empresa-responsavel').value.trim();
+    const email = $('#empresa-email').value.trim();
+    const password = $('#empresa-senha').value;
+    const nomeEmpresa = $('#empresa-nome').value.trim();
+    const cnpj = $('#empresa-cnpj').value.trim() || null;
+    const codigoEmpresa = normalizarCodigoEmpresa($('#empresa-codigo').value);
+
+    if (!codigoEmpresa) {
+      throw new Error('Informe um código de empresa válido.');
+    }
+
+    const { data: authData, error: authError } = await supabaseClient.auth.signUp({
+      email,
+      password,
+    });
+
+    if (authError) throw authError;
+    if (!authData.user) throw new Error('Não foi possível criar o usuário.');
+
+    const { data: empresa, error: empresaError } = await supabaseClient
+      .from('empresas')
+      .insert({
+        nome: nomeEmpresa,
+        cnpj,
+        codigo_empresa: codigoEmpresa,
+      })
+      .select()
+      .single();
+
+    if (empresaError) throw empresaError;
+
+    const { error: perfilError } = await supabaseClient
+      .from('perfis')
+      .insert({
+        id: authData.user.id,
+        nome: nomeResponsavel,
+        email,
+        tipo_usuario: 'admin_empresa',
+        empresa_id: empresa.id,
+      });
+
+    if (perfilError) throw perfilError;
+
+    appState.user = authData.user;
+    appState.perfil = await carregarPerfil(authData.user.id);
+    appState.empresa = empresa;
+
+    form.reset();
+    showToast(`Empresa cadastrada. Código: ${codigoEmpresa}`);
+    irParaDashboardCorreto();
+  } catch (error) {
+    console.error(error);
+    showToast(error.message || 'Erro ao cadastrar empresa.', 'error');
+  } finally {
+    setLoading(form, false);
+  }
+}
+
+async function handleCadastroFuncionario(event) {
+  event.preventDefault();
+
+  if (!supabaseConfigurado) {
+    showToast('Configure o Supabase antes de cadastrar.', 'error');
+    return;
+  }
+
+  const form = event.currentTarget;
+  setLoading(form, true, 'Cadastrando...');
+
+  try {
+    const nome = $('#funcionario-nome').value.trim();
+    const email = $('#funcionario-email').value.trim();
+    const password = $('#funcionario-senha').value;
+    const codigoEmpresa = normalizarCodigoEmpresa($('#funcionario-codigo').value);
+
+    const { data: empresa, error: empresaError } = await supabaseClient
+      .from('empresas')
+      .select('*')
+      .eq('codigo_empresa', codigoEmpresa)
+      .single();
+
+    if (empresaError || !empresa) {
+      throw new Error('Código da empresa não encontrado.');
+    }
+
+    const { data: authData, error: authError } = await supabaseClient.auth.signUp({
+      email,
+      password,
+    });
+
+    if (authError) throw authError;
+    if (!authData.user) throw new Error('Não foi possível criar o usuário.');
+
+    const { error: perfilError } = await supabaseClient
+      .from('perfis')
+      .insert({
+        id: authData.user.id,
+        nome,
+        email,
+        tipo_usuario: 'funcionario',
+        empresa_id: empresa.id,
+      });
+
+    if (perfilError) throw perfilError;
+
+    appState.user = authData.user;
+    appState.perfil = await carregarPerfil(authData.user.id);
+    appState.empresa = empresa;
+
+    form.reset();
+    showToast('Funcionário cadastrado com sucesso.');
+    irParaDashboardCorreto();
+  } catch (error) {
+    console.error(error);
+    showToast(error.message || 'Erro ao cadastrar funcionário.', 'error');
+  } finally {
+    setLoading(form, false);
+  }
+}
+
+async function handleLogout() {
+  if (!supabaseClient) return;
+
+  await supabaseClient.auth.signOut();
+  appState.user = null;
+  appState.perfil = null;
+  appState.empresa = null;
+  atualizarNav();
+  showToast('Você saiu da conta.');
+  showView('home');
+}
+
+function bloquearRecursosNaoImplementados() {
+  // Estas telas já existem no HTML/CSS. A lógica completa vem na próxima fase.
+  $$('[data-start="treino"]').forEach((button) => {
+    button.addEventListener('click', () => {
+      showToast('O modo treino será ativado na próxima etapa do JavaScript.', 'error');
+    });
   });
-  document.getElementById('pontuacao').textContent = pontuacao;
-  document.getElementById('progresso').style.width = `${((indiceAtual + 1) / cards.length) * 100}%`;
-  trocarTela('feedback');
+
+  $$('[data-start="maestria"]').forEach((button) => {
+    button.addEventListener('click', () => {
+      showToast('O Teste de Maestria será ativado na próxima etapa do JavaScript.', 'error');
+    });
+  });
+
+  $('#btn-atualizar-ranking')?.addEventListener('click', () => {
+    showToast('O ranking completo será ativado na fase de resultados.', 'error');
+  });
 }
 
-function proximoCard() {
-  indiceAtual++;
-  if (indiceAtual >= cards.length) return mostrarFinal();
-  renderizarCard();
-  trocarTela('jogo');
+function setupNavigation() {
+  $$('[data-view]').forEach((element) => {
+    element.addEventListener('click', () => {
+      const view = element.dataset.view;
+
+      if (['dashboard-funcionario', 'dashboard-empresa', 'ranking'].includes(view) && !appState.perfil) {
+        showToast('Faça login para acessar essa área.', 'error');
+        showView('login');
+        return;
+      }
+
+      if (view === 'dashboard-funcionario') preencherDashboardFuncionario();
+      if (view === 'dashboard-empresa') preencherDashboardEmpresa();
+
+      showView(view);
+    });
+  });
+
+  $('#logo-btn')?.addEventListener('click', () => {
+    if (appState.perfil) irParaDashboardCorreto();
+    else showView('home');
+  });
 }
 
-function mostrarFinal() {
-  const total = cards.length;
-  const percentual = Math.round((pontuacao / total) * 100);
-  document.getElementById('acertos-final').textContent = pontuacao;
-  document.getElementById('resultado-texto').textContent = `Você acertou ${pontuacao} de ${total} cenários (${percentual}%).`;
-  let msg = 'Continue praticando para reconhecer melhor os sinais de alerta.';
-  if (percentual >= 85) msg = 'Excelente! Você demonstrou ótima atenção aos sinais de golpes digitais.';
-  else if (percentual >= 60) msg = 'Bom resultado! Revise os feedbacks dos erros para melhorar ainda mais.';
-  document.getElementById('mensagem-final').textContent = msg;
-  trocarTela('final');
+function setupForms() {
+  $('#form-login')?.addEventListener('submit', handleLogin);
+  $('#form-cadastro-empresa')?.addEventListener('submit', handleCadastroEmpresa);
+  $('#form-cadastro-funcionario')?.addEventListener('submit', handleCadastroFuncionario);
+  $('#btn-logout')?.addEventListener('click', handleLogout);
 }
 
-function reiniciar() {
-  indiceAtual = 0;
-  pontuacao = 0;
-  renderizarCard();
-  trocarTela('jogo');
+function setupAuthListener() {
+  if (!supabaseClient) return;
+
+  supabaseClient.auth.onAuthStateChange(async (event, session) => {
+    if (event === 'SIGNED_OUT') {
+      appState.user = null;
+      appState.perfil = null;
+      appState.empresa = null;
+      atualizarNav();
+      return;
+    }
+
+    if (session?.user && !appState.user) {
+      appState.user = session.user;
+      appState.perfil = await carregarPerfil(session.user.id);
+      appState.empresa = await carregarEmpresa(appState.perfil?.empresa_id);
+      atualizarNav();
+    }
+  });
 }
 
-document.getElementById('btn-comecar').addEventListener('click', reiniciar);
-document.getElementById('btn-golpe').addEventListener('click', () => responder('golpe'));
-document.getElementById('btn-seguro').addEventListener('click', () => responder('seguro'));
-document.getElementById('btn-proximo').addEventListener('click', proximoCard);
-document.getElementById('btn-reiniciar').addEventListener('click', reiniciar);
+function init() {
+  setupNavigation();
+  setupForms();
+  bloquearRecursosNaoImplementados();
+  setupAuthListener();
+  carregarSessaoAtual();
+}
 
-document.addEventListener('keydown', event => {
-  if (!telas.jogo.classList.contains('ativa')) return;
-  if (event.key === 'ArrowLeft') responder('golpe');
-  if (event.key === 'ArrowRight') responder('seguro');
-});
+document.addEventListener('DOMContentLoaded', init);
