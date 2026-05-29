@@ -1,11 +1,3 @@
-// ==========================================================
-// GOLPESWIPE EMPRESAS - FASE 1
-// Autenticação, cadastro de empresa, cadastro de funcionário
-// e navegação entre telas.
-// ==========================================================
-
-// 1) CONFIGURE AQUI AS CREDENCIAIS DO SEU SUPABASE
-// Supabase > Project Settings > API
 const SUPABASE_URL = 'COLE_AQUI_A_URL_DO_SUPABASE';
 const SUPABASE_ANON_KEY = 'COLE_AQUI_A_ANON_KEY_DO_SUPABASE';
 
