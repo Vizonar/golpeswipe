@@ -1,5 +1,6 @@
 -- GolpeSwipe Empresas - SQL minimo
 -- Perguntas ficam no codigo. Supabase guarda usuarios, empresas e resultados.
+-- Versao sem policies recursivas em perfis.
 
 create extension if not exists "pgcrypto";
 
@@ -83,6 +84,125 @@ from public.testes_maestria tm
 join public.perfis p on p.id = tm.usuario_id
 join public.empresas e on e.id = tm.empresa_id
 where tm.finalizado = true;
+
+alter table public.empresas enable row level security;
+alter table public.perfis enable row level security;
+alter table public.sessoes_treino enable row level security;
+alter table public.respostas_treino enable row level security;
+alter table public.testes_maestria enable row level security;
+alter table public.respostas_maestria enable row level security;
+
+-- Limpeza de policies antigas, inclusive as que causam recursao infinita.
+drop policy if exists "usuarios autenticados criam empresa" on public.empresas;
+drop policy if exists "usuarios veem empresas pelo codigo para cadastro" on public.empresas;
+drop policy if exists "usuarios autenticados podem criar empresas" on public.empresas;
+drop policy if exists "usuarios autenticados podem consultar empresas" on public.empresas;
+drop policy if exists "usuario ve proprio perfil" on public.perfis;
+drop policy if exists "usuario cria proprio perfil" on public.perfis;
+drop policy if exists "usuario atualiza proprio perfil" on public.perfis;
+drop policy if exists "admin ve perfis da propria empresa" on public.perfis;
+drop policy if exists "usuario pode criar o proprio perfil" on public.perfis;
+drop policy if exists "usuario pode ver o proprio perfil" on public.perfis;
+drop policy if exists "usuario pode atualizar o proprio perfil" on public.perfis;
+
+-- EMPRESAS
+create policy "empresas_select_authenticated"
+on public.empresas
+for select
+to authenticated
+using (true);
+
+create policy "empresas_insert_authenticated"
+on public.empresas
+for insert
+to authenticated
+with check (true);
+
+-- PERFIS
+-- Importante: estas policies nao consultam a propria tabela perfis dentro do USING.
+-- Isso evita o erro infinite recursion detected in policy for relation perfis.
+create policy "perfis_select_own"
+on public.perfis
+for select
+to authenticated
+using (id = auth.uid());
+
+create policy "perfis_insert_own"
+on public.perfis
+for insert
+to authenticated
+with check (id = auth.uid());
+
+create policy "perfis_update_own"
+on public.perfis
+for update
+to authenticated
+using (id = auth.uid())
+with check (id = auth.uid());
+
+-- TREINO
+create policy "sessoes_treino_insert_own"
+on public.sessoes_treino
+for insert
+to authenticated
+with check (usuario_id = auth.uid());
+
+create policy "sessoes_treino_select_own"
+on public.sessoes_treino
+for select
+to authenticated
+using (usuario_id = auth.uid());
+
+create policy "sessoes_treino_update_own"
+on public.sessoes_treino
+for update
+to authenticated
+using (usuario_id = auth.uid())
+with check (usuario_id = auth.uid());
+
+create policy "respostas_treino_insert_own"
+on public.respostas_treino
+for insert
+to authenticated
+with check (usuario_id = auth.uid());
+
+create policy "respostas_treino_select_own"
+on public.respostas_treino
+for select
+to authenticated
+using (usuario_id = auth.uid());
+
+-- MAESTRIA
+create policy "testes_maestria_insert_own"
+on public.testes_maestria
+for insert
+to authenticated
+with check (usuario_id = auth.uid());
+
+create policy "testes_maestria_select_own_or_company_basic"
+on public.testes_maestria
+for select
+to authenticated
+using (usuario_id = auth.uid());
+
+create policy "testes_maestria_update_own"
+on public.testes_maestria
+for update
+to authenticated
+using (usuario_id = auth.uid())
+with check (usuario_id = auth.uid());
+
+create policy "respostas_maestria_insert_own"
+on public.respostas_maestria
+for insert
+to authenticated
+with check (usuario_id = auth.uid());
+
+create policy "respostas_maestria_select_own"
+on public.respostas_maestria
+for select
+to authenticated
+using (usuario_id = auth.uid());
 
 create index if not exists idx_perfis_empresa on public.perfis(empresa_id);
 create index if not exists idx_empresas_codigo on public.empresas(codigo_empresa);
