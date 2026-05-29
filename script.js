@@ -1,41 +1,38 @@
-const SUPABASE_URL = 'COLE_AQUI_A_URL_DO_SUPABASE';
-const SUPABASE_ANON_KEY = 'COLE_AQUI_A_ANON_KEY_DO_SUPABASE';
+// ==========================================================
+// GOLPESWIPE EMPRESAS - FASE 1
+// Autenticação, cadastro de empresa/funcionário e dashboards.
+//
+// Segurança:
+// - Não coloque URL/key real do Supabase neste arquivo.
+// - Para desenvolvimento local, copie config.example.js para config.local.js.
+// - O arquivo config.local.js está no .gitignore e não deve ser commitado.
+// - A anon key do Supabase é pública em apps frontend; proteja os dados com RLS.
+// - Nunca use service_role key no navegador.
+// ==========================================================
 
-const supabaseConfigurado =
-  SUPABASE_URL !== 'COLE_AQUI_A_URL_DO_SUPABASE' &&
-  SUPABASE_ANON_KEY !== 'COLE_AQUI_A_ANON_KEY_DO_SUPABASE';
-
-const supabaseClient = supabaseConfigurado
-  ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
-  : null;
-
-// Estado global simples
 const appState = {
   user: null,
   perfil: null,
   empresa: null,
+  supabaseClient: null,
 };
 
-// Helpers de DOM
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => document.querySelectorAll(selector);
 
 function showToast(message, type = 'success') {
   const toast = $('#toast');
   if (!toast) return;
-
   toast.textContent = message;
   toast.className = `toast show ${type}`;
-
   setTimeout(() => {
     toast.className = 'toast';
-  }, 3500);
+  }, 3800);
 }
 
 function setLoading(form, isLoading, text = 'Processando...') {
   const button = form?.querySelector('button[type="submit"]');
   if (!button) return;
-
   if (isLoading) {
     button.dataset.originalText = button.textContent;
     button.textContent = text;
@@ -47,21 +44,16 @@ function setLoading(form, isLoading, text = 'Processando...') {
 }
 
 function normalizarCodigoEmpresa(codigo) {
-  return String(codigo || '')
-    .trim()
-    .toUpperCase()
-    .replace(/\s+/g, '');
+  return String(codigo || '').trim().toUpperCase().replace(/\s+/g, '');
 }
 
 function showView(viewName) {
   $$('.view').forEach((view) => view.classList.remove('active'));
   const target = $(`#view-${viewName}`);
-
   if (!target) {
     console.warn(`Tela não encontrada: ${viewName}`);
     return;
   }
-
   target.classList.add('active');
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
@@ -78,6 +70,153 @@ function atualizarNav() {
 
   $$('.nav-admin').forEach((el) => el.classList.toggle('hidden', !isAdmin));
   $$('.nav-funcionario').forEach((el) => el.classList.toggle('hidden', !(isFuncionario || isAdmin)));
+}
+
+function getSupabaseClient() {
+  return appState.supabaseClient;
+}
+
+async function carregarConfigLocal() {
+  if (window.GOLPESWIPE_CONFIG) return window.GOLPESWIPE_CONFIG;
+
+  await new Promise((resolve) => {
+    const script = document.createElement('script');
+    script.src = 'config.local.js';
+    script.onload = resolve;
+    script.onerror = resolve;
+    document.head.appendChild(script);
+  });
+
+  return window.GOLPESWIPE_CONFIG || null;
+}
+
+async function inicializarSupabase() {
+  const config = await carregarConfigLocal();
+
+  if (!config?.SUPABASE_URL || !config?.SUPABASE_ANON_KEY) {
+    showToast('Configuração do Supabase não encontrada. Crie o arquivo config.local.js a partir do config.example.js.', 'error');
+    return null;
+  }
+
+  if (!window.supabase?.createClient) {
+    showToast('Biblioteca do Supabase não carregou. Verifique sua conexão.', 'error');
+    return null;
+  }
+
+  appState.supabaseClient = window.supabase.createClient(
+    config.SUPABASE_URL,
+    config.SUPABASE_ANON_KEY
+  );
+
+  return appState.supabaseClient;
+}
+
+async function carregarEmpresa(empresaId) {
+  const supabaseClient = getSupabaseClient();
+  if (!supabaseClient || !empresaId) return null;
+
+  const { data, error } = await supabaseClient
+    .from('empresas')
+    .select('*')
+    .eq('id', empresaId)
+    .single();
+
+  if (error) {
+    console.error('Erro ao carregar empresa:', error);
+    return null;
+  }
+
+  return data;
+}
+
+async function carregarPerfil(userId) {
+  const supabaseClient = getSupabaseClient();
+  if (!supabaseClient || !userId) return null;
+
+  const { data, error } = await supabaseClient
+    .from('perfis')
+    .select('*')
+    .eq('id', userId)
+    .single();
+
+  if (error) {
+    console.error('Erro ao carregar perfil:', error);
+    return null;
+  }
+
+  return data;
+}
+
+function preencherDashboardFuncionario() {
+  const nome = appState.perfil?.nome || 'Funcionário';
+  const empresa = appState.empresa?.nome || 'empresa não identificada';
+
+  const boasVindas = $('#funcionario-boas-vindas');
+  const funcionarioEmpresa = $('#funcionario-empresa');
+
+  if (boasVindas) boasVindas.textContent = `Olá, ${nome}!`;
+  if (funcionarioEmpresa) funcionarioEmpresa.textContent = `Empresa vinculada: ${empresa}`;
+}
+
+async function carregarResumoEmpresa() {
+  const supabaseClient = getSupabaseClient();
+  if (!supabaseClient || !appState.empresa?.id) return;
+
+  const empresaId = appState.empresa.id;
+
+  const { count: funcionariosCount } = await supabaseClient
+    .from('perfis')
+    .select('*', { count: 'exact', head: true })
+    .eq('empresa_id', empresaId)
+    .eq('tipo_usuario', 'funcionario');
+
+  const { data: testes, error } = await supabaseClient
+    .from('testes_maestria')
+    .select('acertos,total_perguntas,percentual,nivel_resultado,finalizado_em,usuario_id')
+    .eq('empresa_id', empresaId)
+    .eq('finalizado', true)
+    .order('percentual', { ascending: false })
+    .limit(5);
+
+  if (error) console.error('Erro ao carregar resumo:', error);
+
+  const totalTestes = testes?.length || 0;
+  const media = totalTestes
+    ? Math.round(testes.reduce((sum, item) => sum + Number(item.percentual || 0), 0) / totalTestes)
+    : 0;
+
+  $('#stat-funcionarios').textContent = funcionariosCount || 0;
+  $('#stat-testes').textContent = totalTestes;
+  $('#stat-media').textContent = `${media}%`;
+
+  const rankingResumo = $('#ranking-resumo');
+  if (!rankingResumo) return;
+
+  if (!testes || testes.length === 0) {
+    rankingResumo.className = 'ranking-list empty-state';
+    rankingResumo.textContent = 'Nenhum teste finalizado ainda.';
+    return;
+  }
+
+  rankingResumo.className = 'ranking-list';
+  rankingResumo.innerHTML = testes
+    .map((teste, index) => `
+      <div class="review-item">
+        <strong>${index + 1}º lugar</strong><br />
+        ${teste.acertos}/${teste.total_perguntas} acertos • ${teste.percentual}% • ${teste.nivel_resultado || 'Sem nível'}
+      </div>
+    `)
+    .join('');
+}
+
+async function preencherDashboardEmpresa() {
+  const empresaNome = $('#empresa-dashboard-nome');
+  const empresaCodigo = $('#empresa-dashboard-codigo');
+
+  if (empresaNome) empresaNome.textContent = appState.empresa?.nome || 'Empresa';
+  if (empresaCodigo) empresaCodigo.textContent = `Código da empresa: ${appState.empresa?.codigo_empresa || '-'}`;
+
+  await carregarResumoEmpresa();
 }
 
 function irParaDashboardCorreto() {
@@ -98,43 +237,9 @@ function irParaDashboardCorreto() {
   showView('dashboard-funcionario');
 }
 
-async function carregarEmpresa(empresaId) {
-  if (!supabaseClient || !empresaId) return null;
-
-  const { data, error } = await supabaseClient
-    .from('empresas')
-    .select('*')
-    .eq('id', empresaId)
-    .single();
-
-  if (error) {
-    console.error('Erro ao carregar empresa:', error);
-    return null;
-  }
-
-  return data;
-}
-
-async function carregarPerfil(userId) {
-  if (!supabaseClient || !userId) return null;
-
-  const { data, error } = await supabaseClient
-    .from('perfis')
-    .select('*')
-    .eq('id', userId)
-    .single();
-
-  if (error) {
-    console.error('Erro ao carregar perfil:', error);
-    return null;
-  }
-
-  return data;
-}
-
 async function carregarSessaoAtual() {
-  if (!supabaseConfigurado) {
-    showToast('Configure SUPABASE_URL e SUPABASE_ANON_KEY no script.js.', 'error');
+  const supabaseClient = getSupabaseClient();
+  if (!supabaseClient) {
     showView('home');
     return;
   }
@@ -171,83 +276,11 @@ async function carregarSessaoAtual() {
   irParaDashboardCorreto();
 }
 
-function preencherDashboardFuncionario() {
-  const nome = appState.perfil?.nome || 'Funcionário';
-  const empresa = appState.empresa?.nome || 'empresa não identificada';
-
-  const boasVindas = $('#funcionario-boas-vindas');
-  const funcionarioEmpresa = $('#funcionario-empresa');
-
-  if (boasVindas) boasVindas.textContent = `Olá, ${nome}!`;
-  if (funcionarioEmpresa) funcionarioEmpresa.textContent = `Empresa vinculada: ${empresa}`;
-}
-
-async function preencherDashboardEmpresa() {
-  const empresaNome = $('#empresa-dashboard-nome');
-  const empresaCodigo = $('#empresa-dashboard-codigo');
-
-  if (empresaNome) empresaNome.textContent = appState.empresa?.nome || 'Empresa';
-  if (empresaCodigo) empresaCodigo.textContent = `Código da empresa: ${appState.empresa?.codigo_empresa || '-'}`;
-
-  await carregarResumoEmpresa();
-}
-
-async function carregarResumoEmpresa() {
-  if (!supabaseClient || !appState.empresa?.id) return;
-
-  const empresaId = appState.empresa.id;
-
-  const { count: funcionariosCount } = await supabaseClient
-    .from('perfis')
-    .select('*', { count: 'exact', head: true })
-    .eq('empresa_id', empresaId)
-    .eq('tipo_usuario', 'funcionario');
-
-  const { data: testes, error } = await supabaseClient
-    .from('testes_maestria')
-    .select('acertos,total_perguntas,percentual,nivel_resultado,finalizado_em,usuario_id')
-    .eq('empresa_id', empresaId)
-    .eq('finalizado', true)
-    .order('percentual', { ascending: false })
-    .limit(5);
-
-  if (error) {
-    console.error('Erro ao carregar resumo:', error);
-  }
-
-  const totalTestes = testes?.length || 0;
-  const media = totalTestes
-    ? Math.round(testes.reduce((sum, item) => sum + Number(item.percentual || 0), 0) / totalTestes)
-    : 0;
-
-  $('#stat-funcionarios').textContent = funcionariosCount || 0;
-  $('#stat-testes').textContent = totalTestes;
-  $('#stat-media').textContent = `${media}%`;
-
-  const rankingResumo = $('#ranking-resumo');
-  if (!rankingResumo) return;
-
-  if (!testes || testes.length === 0) {
-    rankingResumo.className = 'ranking-list empty-state';
-    rankingResumo.textContent = 'Nenhum teste finalizado ainda.';
-    return;
-  }
-
-  rankingResumo.className = 'ranking-list';
-  rankingResumo.innerHTML = testes
-    .map((teste, index) => `
-      <div class="review-item">
-        <strong>${index + 1}º lugar</strong><br />
-        ${teste.acertos}/${teste.total_perguntas} acertos • ${teste.percentual}% • ${teste.nivel_resultado || 'Sem nível'}
-      </div>
-    `)
-    .join('');
-}
-
 async function handleLogin(event) {
   event.preventDefault();
+  const supabaseClient = getSupabaseClient();
 
-  if (!supabaseConfigurado) {
+  if (!supabaseClient) {
     showToast('Configure o Supabase antes de fazer login.', 'error');
     return;
   }
@@ -259,20 +292,14 @@ async function handleLogin(event) {
     const email = $('#login-email').value.trim();
     const password = $('#login-senha').value;
 
-    const { data, error } = await supabaseClient.auth.signInWithPassword({
-      email,
-      password,
-    });
-
+    const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
     if (error) throw error;
 
     appState.user = data.user;
     appState.perfil = await carregarPerfil(data.user.id);
     appState.empresa = await carregarEmpresa(appState.perfil?.empresa_id);
 
-    if (!appState.perfil) {
-      throw new Error('Perfil não encontrado. Verifique se o cadastro foi concluído corretamente.');
-    }
+    if (!appState.perfil) throw new Error('Perfil não encontrado. Verifique se o cadastro foi concluído corretamente.');
 
     showToast('Login realizado com sucesso.');
     irParaDashboardCorreto();
@@ -286,8 +313,9 @@ async function handleLogin(event) {
 
 async function handleCadastroEmpresa(event) {
   event.preventDefault();
+  const supabaseClient = getSupabaseClient();
 
-  if (!supabaseConfigurado) {
+  if (!supabaseClient) {
     showToast('Configure o Supabase antes de cadastrar.', 'error');
     return;
   }
@@ -303,39 +331,27 @@ async function handleCadastroEmpresa(event) {
     const cnpj = $('#empresa-cnpj').value.trim() || null;
     const codigoEmpresa = normalizarCodigoEmpresa($('#empresa-codigo').value);
 
-    if (!codigoEmpresa) {
-      throw new Error('Informe um código de empresa válido.');
-    }
+    if (!codigoEmpresa) throw new Error('Informe um código de empresa válido.');
 
-    const { data: authData, error: authError } = await supabaseClient.auth.signUp({
-      email,
-      password,
-    });
-
+    const { data: authData, error: authError } = await supabaseClient.auth.signUp({ email, password });
     if (authError) throw authError;
     if (!authData.user) throw new Error('Não foi possível criar o usuário.');
 
     const { data: empresa, error: empresaError } = await supabaseClient
       .from('empresas')
-      .insert({
-        nome: nomeEmpresa,
-        cnpj,
-        codigo_empresa: codigoEmpresa,
-      })
+      .insert({ nome: nomeEmpresa, cnpj, codigo_empresa: codigoEmpresa })
       .select()
       .single();
 
     if (empresaError) throw empresaError;
 
-    const { error: perfilError } = await supabaseClient
-      .from('perfis')
-      .insert({
-        id: authData.user.id,
-        nome: nomeResponsavel,
-        email,
-        tipo_usuario: 'admin_empresa',
-        empresa_id: empresa.id,
-      });
+    const { error: perfilError } = await supabaseClient.from('perfis').insert({
+      id: authData.user.id,
+      nome: nomeResponsavel,
+      email,
+      tipo_usuario: 'admin_empresa',
+      empresa_id: empresa.id,
+    });
 
     if (perfilError) throw perfilError;
 
@@ -356,8 +372,9 @@ async function handleCadastroEmpresa(event) {
 
 async function handleCadastroFuncionario(event) {
   event.preventDefault();
+  const supabaseClient = getSupabaseClient();
 
-  if (!supabaseConfigurado) {
+  if (!supabaseClient) {
     showToast('Configure o Supabase antes de cadastrar.', 'error');
     return;
   }
@@ -377,27 +394,19 @@ async function handleCadastroFuncionario(event) {
       .eq('codigo_empresa', codigoEmpresa)
       .single();
 
-    if (empresaError || !empresa) {
-      throw new Error('Código da empresa não encontrado.');
-    }
+    if (empresaError || !empresa) throw new Error('Código da empresa não encontrado.');
 
-    const { data: authData, error: authError } = await supabaseClient.auth.signUp({
-      email,
-      password,
-    });
-
+    const { data: authData, error: authError } = await supabaseClient.auth.signUp({ email, password });
     if (authError) throw authError;
     if (!authData.user) throw new Error('Não foi possível criar o usuário.');
 
-    const { error: perfilError } = await supabaseClient
-      .from('perfis')
-      .insert({
-        id: authData.user.id,
-        nome,
-        email,
-        tipo_usuario: 'funcionario',
-        empresa_id: empresa.id,
-      });
+    const { error: perfilError } = await supabaseClient.from('perfis').insert({
+      id: authData.user.id,
+      nome,
+      email,
+      tipo_usuario: 'funcionario',
+      empresa_id: empresa.id,
+    });
 
     if (perfilError) throw perfilError;
 
@@ -417,6 +426,7 @@ async function handleCadastroFuncionario(event) {
 }
 
 async function handleLogout() {
+  const supabaseClient = getSupabaseClient();
   if (!supabaseClient) return;
 
   await supabaseClient.auth.signOut();
@@ -429,7 +439,6 @@ async function handleLogout() {
 }
 
 function bloquearRecursosNaoImplementados() {
-  // Estas telas já existem no HTML/CSS. A lógica completa vem na próxima fase.
   $$('[data-start="treino"]').forEach((button) => {
     button.addEventListener('click', () => {
       showToast('O modo treino será ativado na próxima etapa do JavaScript.', 'error');
@@ -479,6 +488,7 @@ function setupForms() {
 }
 
 function setupAuthListener() {
+  const supabaseClient = getSupabaseClient();
   if (!supabaseClient) return;
 
   supabaseClient.auth.onAuthStateChange(async (event, session) => {
@@ -499,12 +509,13 @@ function setupAuthListener() {
   });
 }
 
-function init() {
+async function init() {
   setupNavigation();
   setupForms();
   bloquearRecursosNaoImplementados();
+  await inicializarSupabase();
   setupAuthListener();
-  carregarSessaoAtual();
+  await carregarSessaoAtual();
 }
 
 document.addEventListener('DOMContentLoaded', init);
