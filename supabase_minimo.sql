@@ -97,6 +97,7 @@ drop policy if exists "usuarios autenticados criam empresa" on public.empresas;
 drop policy if exists "usuarios veem empresas pelo codigo para cadastro" on public.empresas;
 drop policy if exists "usuarios autenticados podem criar empresas" on public.empresas;
 drop policy if exists "usuarios autenticados podem consultar empresas" on public.empresas;
+drop policy if exists "empresas_select_anon_codigo" on public.empresas;
 drop policy if exists "usuario ve proprio perfil" on public.perfis;
 drop policy if exists "usuario cria proprio perfil" on public.perfis;
 drop policy if exists "usuario atualiza proprio perfil" on public.perfis;
@@ -110,6 +111,14 @@ create policy "empresas_select_authenticated"
 on public.empresas
 for select
 to authenticated
+using (true);
+
+-- Necessario para o cadastro de funcionario validar o codigo da empresa antes do login.
+-- Para uma versao futura mais rigorosa, isso pode virar uma RPC security definer.
+create policy "empresas_select_anon_codigo"
+on public.empresas
+for select
+to anon
 using (true);
 
 create policy "empresas_insert_authenticated"
