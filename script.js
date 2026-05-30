@@ -491,7 +491,7 @@ function setupAuthListener() {
   const supabaseClient = getSupabaseClient();
   if (!supabaseClient) return;
 
-  supabaseClient.auth.onAuthStateChange(async (event, session) => {
+  supabaseClient.auth.onAuthStateChange((event, session) => {
     if (event === 'SIGNED_OUT') {
       appState.user = null;
       appState.perfil = null;
@@ -500,11 +500,20 @@ function setupAuthListener() {
       return;
     }
 
+    // Não use await direto dentro do onAuthStateChange.
+    // Em alguns navegadores/versões do supabase-js isso pode travar signInWithPassword,
+    // deixando o botão preso em "Entrando...".
     if (session?.user && !appState.user) {
-      appState.user = session.user;
-      appState.perfil = await carregarPerfil(session.user.id);
-      appState.empresa = await carregarEmpresa(appState.perfil?.empresa_id);
-      atualizarNav();
+      setTimeout(async () => {
+        try {
+          appState.user = session.user;
+          appState.perfil = await carregarPerfil(session.user.id);
+          appState.empresa = await carregarEmpresa(appState.perfil?.empresa_id);
+          atualizarNav();
+        } catch (error) {
+          console.error('Erro no listener de autenticação:', error);
+        }
+      }, 0);
     }
   });
 }
