@@ -33,21 +33,55 @@
   background: rgba(56, 189, 248, 0.18);
 }
 
-.config-modal {
+.config-modal,
+.modo-explicacao-card {
   width: min(920px, 100%);
 }
 
-.config-grid {
+.config-grid,
+.modo-info-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 1rem;
 }
 
-.config-box {
+.modo-info-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin: 1rem 0;
+}
+
+.config-box,
+.modo-info-grid article {
   padding: 1rem;
   border-radius: 1rem;
   border: 1px solid rgba(255, 255, 255, 0.1);
   background: rgba(255, 255, 255, 0.055);
+}
+
+.modo-info-grid strong {
+  display: block;
+  margin-bottom: 0.35rem;
+  font-size: 1.05rem;
+}
+
+.modo-info-grid span {
+  opacity: 0.78;
+  line-height: 1.45;
+}
+
+.modo-explicacao-conteudo p {
+  margin-bottom: 0;
+  line-height: 1.65;
+}
+
+.modo-explicacao-acoes {
+  margin-top: 1.2rem;
+}
+
+#view-treino .game-topbar h2,
+#view-maestria .game-topbar h2,
+#view-maestria .alert-box {
+  display: none !important;
 }
 
 .config-box h3 {
@@ -274,7 +308,8 @@
     min-height: auto !important;
   }
 
-  .report-summary-grid {
+  .report-summary-grid,
+  .modo-info-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
@@ -291,7 +326,8 @@
   }
 
   .config-grid,
-  .report-summary-grid {
+  .report-summary-grid,
+  .modo-info-grid {
     grid-template-columns: 1fr;
   }
 
