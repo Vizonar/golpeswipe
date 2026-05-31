@@ -2,12 +2,32 @@
 // Usa RPCs security definer no Supabase para evitar policy recursiva em perfis.
 
 let resultadosEmpresaCache = [];
+let funcionariosEmpresaCache = [];
 
 function normalizarBusca(texto) {
   return String(texto || '')
     .toLowerCase()
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '');
+}
+
+function atualizarCardsResumoEmpresa() {
+  const statFuncionarios = document.querySelector('#stat-funcionarios');
+  const statTestes = document.querySelector('#stat-testes');
+  const statMedia = document.querySelector('#stat-media');
+
+  if (statFuncionarios) statFuncionarios.textContent = funcionariosEmpresaCache.length || 0;
+
+  const testesMaestria = resultadosEmpresaCache.filter((item) => item.tipo === 'Teste de Maestria');
+  const baseMedia = testesMaestria.length ? testesMaestria : resultadosEmpresaCache;
+
+  if (statTestes) statTestes.textContent = testesMaestria.length || 0;
+
+  const media = baseMedia.length
+    ? Math.round(baseMedia.reduce((sum, item) => sum + Number(item.percentual || 0), 0) / baseMedia.length)
+    : 0;
+
+  if (statMedia) statMedia.textContent = `${media}%`;
 }
 
 function garantirFiltrosResultadosEmpresa() {
@@ -46,6 +66,8 @@ async function carregarFuncionariosEmpresa() {
   tbody.innerHTML = '<tr><td colspan="5">Carregando funcionários...</td></tr>';
 
   if (!supabaseClient || !appState?.perfil || appState.perfil.tipo_usuario !== 'admin_empresa') {
+    funcionariosEmpresaCache = [];
+    atualizarCardsResumoEmpresa();
     tbody.innerHTML = '<tr><td colspan="5">Apenas administradores da empresa podem ver esta lista.</td></tr>';
     return [];
   }
@@ -54,16 +76,21 @@ async function carregarFuncionariosEmpresa() {
 
   if (error) {
     console.error('Erro ao carregar funcionários:', error);
+    funcionariosEmpresaCache = [];
+    atualizarCardsResumoEmpresa();
     tbody.innerHTML = '<tr><td colspan="5">Não foi possível carregar os funcionários. Rode o SQL de atualização no Supabase.</td></tr>';
     return [];
   }
 
-  if (!data || data.length === 0) {
+  funcionariosEmpresaCache = data || [];
+  atualizarCardsResumoEmpresa();
+
+  if (funcionariosEmpresaCache.length === 0) {
     tbody.innerHTML = '<tr><td colspan="5">Nenhum funcionário cadastrado ainda.</td></tr>';
     return [];
   }
 
-  tbody.innerHTML = data.map((funcionario) => {
+  tbody.innerHTML = funcionariosEmpresaCache.map((funcionario) => {
     const dataCadastro = funcionario.criado_em
       ? new Date(funcionario.criado_em).toLocaleDateString('pt-BR')
       : '-';
@@ -87,7 +114,7 @@ async function carregarFuncionariosEmpresa() {
     `;
   }).join('');
 
-  return data;
+  return funcionariosEmpresaCache;
 }
 
 function renderizarResultadosEmpresa(lista) {
@@ -145,6 +172,8 @@ async function carregarResultadosEmpresa() {
   tbody.innerHTML = '<tr><td colspan="7">Carregando resultados...</td></tr>';
 
   if (!supabaseClient || !appState?.perfil || appState.perfil.tipo_usuario !== 'admin_empresa') {
+    resultadosEmpresaCache = [];
+    atualizarCardsResumoEmpresa();
     tbody.innerHTML = '<tr><td colspan="7">Apenas administradores da empresa podem ver os resultados.</td></tr>';
     return [];
   }
@@ -153,11 +182,14 @@ async function carregarResultadosEmpresa() {
 
   if (error) {
     console.error('Erro ao carregar resultados:', error);
+    resultadosEmpresaCache = [];
+    atualizarCardsResumoEmpresa();
     tbody.innerHTML = '<tr><td colspan="7">Não foi possível carregar os resultados. Rode o SQL de atualização no Supabase.</td></tr>';
     return [];
   }
 
   resultadosEmpresaCache = data || [];
+  atualizarCardsResumoEmpresa();
 
   if (resultadosEmpresaCache.length === 0) {
     tbody.innerHTML = '<tr><td colspan="7">Nenhum resultado registrado ainda. Finalize um treino para aparecer aqui.</td></tr>';
