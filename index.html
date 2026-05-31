@@ -12,10 +12,7 @@
   <header class="app-header">
     <button id="logo-btn" class="logo" type="button" aria-label="Voltar para início">
       <span class="logo-icon">GS</span>
-      <span>
-        <strong>GolpeSwipe</strong>
-        <small>Empresas</small>
-      </span>
+      <span><strong>GolpeSwipe</strong><small>Empresas</small></span>
     </button>
 
     <nav id="main-nav" class="main-nav hidden">
@@ -30,111 +27,35 @@
 
   <main class="app-shell">
     <section id="view-home" class="view active">
-      <div class="hero-grid">
-        <div class="hero-copy">
-          <p class="eyebrow">Treinamento prático em cibersegurança</p>
-          <h1>Teste o conhecimento da sua equipe contra golpes digitais.</h1>
-          <p class="lead">O GolpeSwipe ajuda pequenas empresas a treinarem funcionários com cenários simulados, feedback educativo, Teste de Maestria e ranking por empresa.</p>
-          <div class="hero-actions">
-            <button class="btn btn-primary" data-view="login" type="button">Entrar</button>
-            <button class="btn btn-secondary" data-view="cadastro-empresa" type="button">Cadastrar empresa</button>
-            <button class="btn btn-ghost" data-view="cadastro-funcionario" type="button">Cadastrar funcionário</button>
-          </div>
-        </div>
-        <div class="hero-card preview-card">
-          <span class="badge">Exemplo de cenário</span>
-          <h2>Pedido urgente de Pix</h2>
-          <p>Você recebe uma mensagem de um número desconhecido dizendo ser um familiar e pedindo dinheiro com urgência.</p>
-          <div class="preview-actions"><span class="pill danger">É golpe</span><span class="pill safe">Não é golpe</span></div>
-          <p class="mini-text">A plataforma explica o motivo da resposta e salva o desempenho no ranking.</p>
-        </div>
-      </div>
+      <div class="hero-grid"><div class="hero-copy"><p class="eyebrow">Treinamento prático em cibersegurança</p><h1>Teste o conhecimento da sua equipe contra golpes digitais.</h1><p class="lead">O GolpeSwipe ajuda pequenas empresas a treinarem funcionários com cenários simulados, feedback educativo, Teste de Maestria e ranking por empresa.</p><div class="hero-actions"><button class="btn btn-primary" data-view="login" type="button">Entrar</button><button class="btn btn-secondary" data-view="cadastro-empresa" type="button">Cadastrar empresa</button><button class="btn btn-ghost" data-view="cadastro-funcionario" type="button">Cadastrar funcionário</button></div></div><div class="hero-card preview-card"><span class="badge">Exemplo de cenário</span><h2>Pedido urgente de Pix</h2><p>Você recebe uma mensagem de um número desconhecido dizendo ser um familiar e pedindo dinheiro com urgência.</p><div class="preview-actions"><span class="pill danger">É golpe</span><span class="pill safe">Não é golpe</span></div><p class="mini-text">A plataforma explica o motivo da resposta e salva o desempenho no ranking.</p></div></div>
     </section>
 
-    <section id="view-login" class="view">
-      <div class="form-card">
-        <p class="eyebrow">Acesso</p><h2>Entrar no GolpeSwipe</h2>
-        <form id="form-login" class="form">
-          <label>E-mail<input id="login-email" type="email" placeholder="seu@email.com" required /></label>
-          <label>Senha<input id="login-senha" type="password" placeholder="Sua senha" required /></label>
-          <button class="btn btn-primary full" type="submit">Entrar</button>
-        </form>
-        <p class="switch-text">Ainda não tem conta? <button data-view="cadastro-funcionario" type="button">Cadastrar funcionário</button> ou <button data-view="cadastro-empresa" type="button">Cadastrar empresa</button></p>
-      </div>
-    </section>
+    <section id="view-login" class="view"><div class="form-card"><p class="eyebrow">Acesso</p><h2>Entrar no GolpeSwipe</h2><form id="form-login" class="form"><label>E-mail<input id="login-email" type="email" placeholder="seu@email.com" required /></label><label>Senha<input id="login-senha" type="password" placeholder="Sua senha" required /></label><button class="btn btn-primary full" type="submit">Entrar</button></form><p class="switch-text">Ainda não tem conta? <button data-view="cadastro-funcionario" type="button">Cadastrar funcionário</button> ou <button data-view="cadastro-empresa" type="button">Cadastrar empresa</button></p></div></section>
 
-    <section id="view-cadastro-empresa" class="view">
-      <div class="form-card wide">
-        <p class="eyebrow">Cadastro de empresa</p><h2>Crie a conta da empresa</h2>
-        <p class="muted">O responsável cria a empresa e recebe um código para os funcionários entrarem no ranking correto.</p>
-        <form id="form-cadastro-empresa" class="form two-cols">
-          <label>Nome do responsável<input id="empresa-responsavel" type="text" placeholder="Ex: Ana Souza" required /></label>
-          <label>E-mail do responsável<input id="empresa-email" type="email" placeholder="admin@empresa.com" required /></label>
-          <label>Senha<input id="empresa-senha" type="password" placeholder="Mínimo 6 caracteres" minlength="6" required /></label>
-          <label>Nome da empresa<input id="empresa-nome" type="text" placeholder="Ex: Padaria Sol Nascente" required /></label>
-          <label>CNPJ <span class="optional">opcional</span><input id="empresa-cnpj" type="text" placeholder="00.000.000/0000-00" /></label>
-          <label>Código da empresa<input id="empresa-codigo" type="text" placeholder="Ex: SOL2026" required /></label>
-          <button class="btn btn-primary full span-2" type="submit">Cadastrar empresa</button>
-        </form>
-      </div>
-    </section>
+    <section id="view-cadastro-empresa" class="view"><div class="form-card wide"><p class="eyebrow">Cadastro de empresa</p><h2>Crie a conta da empresa</h2><p class="muted">O responsável cria a empresa e recebe um código para os funcionários entrarem no ranking correto.</p><form id="form-cadastro-empresa" class="form two-cols"><label>Nome do responsável<input id="empresa-responsavel" type="text" placeholder="Ex: Ana Souza" required /></label><label>E-mail do responsável<input id="empresa-email" type="email" placeholder="admin@empresa.com" required /></label><label>Senha<input id="empresa-senha" type="password" placeholder="Mínimo 6 caracteres" minlength="6" required /></label><label>Nome da empresa<input id="empresa-nome" type="text" placeholder="Ex: Padaria Sol Nascente" required /></label><label>CNPJ <span class="optional">opcional</span><input id="empresa-cnpj" type="text" placeholder="00.000.000/0000-00" /></label><label>Código da empresa<input id="empresa-codigo" type="text" placeholder="Ex: SOL2026" required /></label><button class="btn btn-primary full span-2" type="submit">Cadastrar empresa</button></form></div></section>
 
-    <section id="view-cadastro-funcionario" class="view">
-      <div class="form-card">
-        <p class="eyebrow">Cadastro de funcionário</p><h2>Entrar em uma empresa</h2>
-        <form id="form-cadastro-funcionario" class="form">
-          <label>Nome completo<input id="funcionario-nome" type="text" placeholder="Ex: Carlos Lima" required /></label>
-          <label>E-mail<input id="funcionario-email" type="email" placeholder="voce@empresa.com" required /></label>
-          <label>Senha<input id="funcionario-senha" type="password" placeholder="Mínimo 6 caracteres" minlength="6" required /></label>
-          <label>Código da empresa<input id="funcionario-codigo" type="text" placeholder="Código informado pela empresa" required /></label>
-          <button class="btn btn-primary full" type="submit">Cadastrar funcionário</button>
-        </form>
-      </div>
-    </section>
+    <section id="view-cadastro-funcionario" class="view"><div class="form-card"><p class="eyebrow">Cadastro de funcionário</p><h2>Entrar em uma empresa</h2><form id="form-cadastro-funcionario" class="form"><label>Nome completo<input id="funcionario-nome" type="text" placeholder="Ex: Carlos Lima" required /></label><label>E-mail<input id="funcionario-email" type="email" placeholder="voce@empresa.com" required /></label><label>Senha<input id="funcionario-senha" type="password" placeholder="Mínimo 6 caracteres" minlength="6" required /></label><label>Código da empresa<input id="funcionario-codigo" type="text" placeholder="Código informado pela empresa" required /></label><button class="btn btn-primary full" type="submit">Cadastrar funcionário</button></form></div></section>
 
-    <section id="view-dashboard-funcionario" class="view">
-      <div class="dashboard-head"><div><p class="eyebrow">Painel do funcionário</p><h2 id="funcionario-boas-vindas">Olá!</h2><p id="funcionario-empresa" class="muted"></p></div></div>
-      <div class="cards-grid">
-        <article class="action-card"><span class="badge">20 perguntas</span><h3>Modo Treino</h3><p>Responda 20 cenários aleatórios com feedback imediato após cada resposta.</p><button class="btn btn-secondary full" data-start="treino" type="button">Começar treino</button></article>
-        <article class="action-card highlight"><span class="badge">100 perguntas</span><h3>Teste de Maestria</h3><p>Responda o repertório completo e registre sua pontuação no ranking da empresa.</p><button class="btn btn-primary full" data-start="maestria" type="button">Iniciar teste</button></article>
-        <article class="action-card"><span class="badge">Ranking</span><h3>Desempenho da equipe</h3><p>Veja sua posição em relação aos outros funcionários da mesma empresa.</p><button class="btn btn-ghost full" data-view="ranking" type="button">Ver ranking</button></article>
-      </div>
-    </section>
+    <section id="view-dashboard-funcionario" class="view"><div class="dashboard-head"><div><p class="eyebrow">Painel do funcionário</p><h2 id="funcionario-boas-vindas">Olá!</h2><p id="funcionario-empresa" class="muted"></p></div></div><div class="cards-grid"><article class="action-card"><span class="badge">20 perguntas</span><h3>Modo Treino</h3><p>Responda 20 cenários aleatórios com feedback imediato após cada resposta.</p><button class="btn btn-secondary full" data-start="treino" type="button">Começar treino</button></article><article class="action-card highlight"><span class="badge">100 perguntas</span><h3>Teste de Maestria</h3><p>Responda o repertório completo e registre sua pontuação no ranking da empresa.</p><button class="btn btn-primary full" data-start="maestria" type="button">Iniciar teste</button></article><article class="action-card"><span class="badge">Ranking</span><h3>Desempenho da equipe</h3><p>Veja sua posição em relação aos outros funcionários da mesma empresa.</p><button class="btn btn-ghost full" data-view="ranking" type="button">Ver ranking</button></article></div></section>
 
     <section id="view-dashboard-empresa" class="view">
       <div class="dashboard-head"><div><p class="eyebrow">Painel da empresa</p><h2 id="empresa-dashboard-nome">Empresa</h2><p id="empresa-dashboard-codigo" class="muted"></p></div></div>
       <div class="stats-grid"><div class="stat-card"><span id="stat-funcionarios">0</span><small>Funcionários cadastrados</small></div><div class="stat-card"><span id="stat-testes">0</span><small>Testes finalizados</small></div><div class="stat-card"><span id="stat-media">0%</span><small>Média da empresa</small></div></div>
+      <div class="panel-card"><div class="panel-head"><h3>Funcionários cadastrados</h3><button id="btn-atualizar-funcionarios" class="btn btn-secondary" type="button">Atualizar lista</button></div><div class="table-wrap"><table class="ranking-table"><thead><tr><th>Nome</th><th>E-mail</th><th>Cadastro</th><th>Treinos</th><th>Melhor maestria</th></tr></thead><tbody id="funcionarios-tbody"><tr><td colspan="5">Carregando funcionários...</td></tr></tbody></table></div></div>
       <div class="panel-card"><div class="panel-head"><h3>Ranking da empresa</h3><button class="btn btn-secondary" data-view="ranking" type="button">Abrir ranking completo</button></div><div id="ranking-resumo" class="ranking-list empty-state">Nenhum teste finalizado ainda.</div></div>
     </section>
 
-    <section id="view-treino" class="view">
-      <div class="game-layout"><div class="game-topbar"><div><p class="eyebrow">Modo Treino</p><h2>Treino com feedback imediato</h2><p id="treino-contador" class="muted">Pergunta 1 de 20</p></div><div class="score-box">Acertos: <strong id="treino-acertos">0</strong></div></div>
-        <div class="progress"><div id="treino-progresso"></div></div>
-        <article id="treino-card" class="question-card"><span id="treino-categoria" class="badge"></span><h3 id="treino-titulo"></h3><p id="treino-cenario"></p><p class="question-text">Considerando esse cenário, é golpe ou não é golpe?</p></article>
-        <div class="answer-actions"><button id="treino-btn-golpe" class="btn btn-danger" type="button">← É golpe</button><button id="treino-btn-seguro" class="btn btn-safe" type="button">Não é golpe →</button></div>
-      </div>
-    </section>
-
-    <section id="view-feedback-treino" class="view">
-      <div class="feedback-card"><p id="feedback-status" class="status-pill"></p><h2 id="feedback-titulo"></h2><p id="feedback-texto"></p><div class="info-box"><h3>Sinais observados</h3><ul id="feedback-sinais"></ul></div><div class="info-box"><h3>Dica preventiva</h3><p id="feedback-dica"></p></div><button id="feedback-proximo" class="btn btn-primary full" type="button">Próximo cenário</button></div>
-    </section>
-
-    <section id="view-maestria" class="view">
-      <div class="game-layout"><div class="game-topbar"><div><p class="eyebrow">Teste de Maestria</p><h2>Repertório completo</h2><p id="maestria-contador" class="muted">Pergunta 1 de 100</p></div><div class="score-box">Acertos: <strong id="maestria-acertos">0</strong></div></div><div class="alert-box">Neste modo, o resultado final será salvo no ranking da empresa. O feedback detalhado aparece ao final.</div><div class="progress"><div id="maestria-progresso"></div></div><article id="maestria-card" class="question-card mastery"><span id="maestria-categoria" class="badge"></span><h3 id="maestria-titulo"></h3><p id="maestria-cenario"></p><p class="question-text">Considerando esse cenário, é golpe ou não é golpe?</p></article><div class="answer-actions"><button id="maestria-btn-golpe" class="btn btn-danger" type="button">← É golpe</button><button id="maestria-btn-seguro" class="btn btn-safe" type="button">Não é golpe →</button></div></div>
-    </section>
-
-    <section id="view-resultado" class="view">
-      <div class="result-card"><p class="eyebrow">Resultado</p><h2 id="resultado-titulo">Teste concluído!</h2><div class="big-score"><span id="resultado-acertos">0</span>/<span id="resultado-total">0</span></div><p id="resultado-percentual" class="lead"></p><p id="resultado-nivel" class="result-level"></p><div id="resultado-detalhes" class="review-list"></div><div class="hero-actions center"><button class="btn btn-primary" data-view="dashboard-funcionario" type="button">Voltar ao painel</button><button class="btn btn-secondary" data-view="ranking" type="button">Ver ranking</button></div></div>
-    </section>
-
-    <section id="view-ranking" class="view">
-      <div class="panel-card"><div class="panel-head"><div><p class="eyebrow">Ranking</p><h2>Ranking da empresa</h2><p id="ranking-empresa" class="muted"></p></div><button id="btn-atualizar-ranking" class="btn btn-secondary" type="button">Atualizar</button></div><div class="table-wrap"><table class="ranking-table"><thead><tr><th>#</th><th>Funcionário</th><th>Acertos</th><th>Percentual</th><th>Nível</th><th>Data</th></tr></thead><tbody id="ranking-tbody"><tr><td colspan="6">Nenhum resultado encontrado.</td></tr></tbody></table></div></div>
-    </section>
+    <section id="view-treino" class="view"><div class="game-layout"><div class="game-topbar"><div><p class="eyebrow">Modo Treino</p><h2>Treino com feedback imediato</h2><p id="treino-contador" class="muted">Pergunta 1 de 20</p></div><div class="score-box">Acertos: <strong id="treino-acertos">0</strong></div></div><div class="progress"><div id="treino-progresso"></div></div><article id="treino-card" class="question-card"><span id="treino-categoria" class="badge"></span><h3 id="treino-titulo"></h3><p id="treino-cenario"></p><p class="question-text">Considerando esse cenário, é golpe ou não é golpe?</p></article><div class="answer-actions"><button id="treino-btn-golpe" class="btn btn-danger" type="button">← É golpe</button><button id="treino-btn-seguro" class="btn btn-safe" type="button">Não é golpe →</button></div></div></section>
+    <section id="view-feedback-treino" class="view"><div class="feedback-card"><p id="feedback-status" class="status-pill"></p><h2 id="feedback-titulo"></h2><p id="feedback-texto"></p><div class="info-box"><h3>Sinais observados</h3><ul id="feedback-sinais"></ul></div><div class="info-box"><h3>Dica preventiva</h3><p id="feedback-dica"></p></div><button id="feedback-proximo" class="btn btn-primary full" type="button">Próximo cenário</button></div></section>
+    <section id="view-maestria" class="view"><div class="game-layout"><div class="game-topbar"><div><p class="eyebrow">Teste de Maestria</p><h2>Repertório completo</h2><p id="maestria-contador" class="muted">Pergunta 1 de 100</p></div><div class="score-box">Acertos: <strong id="maestria-acertos">0</strong></div></div><div class="alert-box">Neste modo, o resultado final será salvo no ranking da empresa. O feedback detalhado aparece ao final.</div><div class="progress"><div id="maestria-progresso"></div></div><article id="maestria-card" class="question-card mastery"><span id="maestria-categoria" class="badge"></span><h3 id="maestria-titulo"></h3><p id="maestria-cenario"></p><p class="question-text">Considerando esse cenário, é golpe ou não é golpe?</p></article><div class="answer-actions"><button id="maestria-btn-golpe" class="btn btn-danger" type="button">← É golpe</button><button id="maestria-btn-seguro" class="btn btn-safe" type="button">Não é golpe →</button></div></div></section>
+    <section id="view-resultado" class="view"><div class="result-card"><p class="eyebrow">Resultado</p><h2 id="resultado-titulo">Teste concluído!</h2><div class="big-score"><span id="resultado-acertos">0</span>/<span id="resultado-total">0</span></div><p id="resultado-percentual" class="lead"></p><p id="resultado-nivel" class="result-level"></p><div id="resultado-detalhes" class="review-list"></div><div class="hero-actions center"><button class="btn btn-primary" data-view="dashboard-funcionario" type="button">Voltar ao painel</button><button class="btn btn-secondary" data-view="ranking" type="button">Ver ranking</button></div></div></section>
+    <section id="view-ranking" class="view"><div class="panel-card"><div class="panel-head"><div><p class="eyebrow">Ranking</p><h2>Ranking da empresa</h2><p id="ranking-empresa" class="muted"></p></div><button id="btn-atualizar-ranking" class="btn btn-secondary" type="button">Atualizar</button></div><div class="table-wrap"><table class="ranking-table"><thead><tr><th>#</th><th>Funcionário</th><th>Acertos</th><th>Percentual</th><th>Nível</th><th>Data</th></tr></thead><tbody id="ranking-tbody"><tr><td colspan="6">Nenhum resultado encontrado.</td></tr></tbody></table></div></div></section>
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="perguntas.js"></script>
   <script src="script.js"></script>
+  <script src="painel_empresa.js"></script>
   <script src="treino.js"></script>
 </body>
 </html>
