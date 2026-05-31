@@ -179,7 +179,11 @@ function setupMaestria() {
     button.addEventListener('click', (event) => {
       event.preventDefault();
       event.stopImmediatePropagation();
-      iniciarMaestria();
+      if (typeof abrirExplicacaoModo === 'function') {
+        abrirExplicacaoModo('maestria');
+      } else {
+        iniciarMaestria();
+      }
     }, true);
   });
 
