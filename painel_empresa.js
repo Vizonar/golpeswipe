@@ -1,5 +1,5 @@
-// Lista de funcionários no painel da empresa.
-// Usa uma RPC security definer no Supabase para evitar policy recursiva em perfis.
+// Painel da empresa: funcionários e histórico de resultados.
+// Usa RPCs security definer no Supabase para evitar policy recursiva em perfis.
 
 async function carregarFuncionariosEmpresa() {
   const supabaseClient = getSupabaseClient();
@@ -53,13 +53,65 @@ async function carregarFuncionariosEmpresa() {
   return data;
 }
 
-// Sobrescreve a função original para incluir a lista de funcionários no painel.
+async function carregarResultadosEmpresa() {
+  const supabaseClient = getSupabaseClient();
+  const tbody = document.querySelector('#resultados-tbody');
+
+  if (!tbody) return [];
+  tbody.innerHTML = '<tr><td colspan="7">Carregando resultados...</td></tr>';
+
+  if (!supabaseClient || !appState?.perfil || appState.perfil.tipo_usuario !== 'admin_empresa') {
+    tbody.innerHTML = '<tr><td colspan="7">Apenas administradores da empresa podem ver os resultados.</td></tr>';
+    return [];
+  }
+
+  const { data, error } = await supabaseClient.rpc('listar_resultados_empresa');
+
+  if (error) {
+    console.error('Erro ao carregar resultados:', error);
+    tbody.innerHTML = '<tr><td colspan="7">Não foi possível carregar os resultados. Rode o SQL de atualização no Supabase.</td></tr>';
+    return [];
+  }
+
+  if (!data || data.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="7">Nenhum resultado registrado ainda. Finalize um treino para aparecer aqui.</td></tr>';
+    return [];
+  }
+
+  tbody.innerHTML = data.map((resultado) => {
+    const dataFinalizacao = resultado.finalizado_em
+      ? new Date(resultado.finalizado_em).toLocaleString('pt-BR')
+      : '-';
+
+    const percentual = resultado.percentual !== null && resultado.percentual !== undefined
+      ? `${Number(resultado.percentual).toFixed(0)}%`
+      : '-';
+
+    return `
+      <tr>
+        <td>${resultado.tipo}</td>
+        <td>${resultado.funcionario}</td>
+        <td>${resultado.email}</td>
+        <td>${resultado.acertos}/${resultado.total_perguntas}</td>
+        <td>${percentual}</td>
+        <td>${resultado.nivel_resultado || '-'}</td>
+        <td>${dataFinalizacao}</td>
+      </tr>
+    `;
+  }).join('');
+
+  return data;
+}
+
+// Sobrescreve a função original para incluir dados administrativos no painel.
 const preencherDashboardEmpresaOriginal = preencherDashboardEmpresa;
-preencherDashboardEmpresa = async function preencherDashboardEmpresaComFuncionarios() {
+preencherDashboardEmpresa = async function preencherDashboardEmpresaComDados() {
   await preencherDashboardEmpresaOriginal();
   await carregarFuncionariosEmpresa();
+  await carregarResultadosEmpresa();
 };
 
 document.addEventListener('DOMContentLoaded', () => {
   document.querySelector('#btn-atualizar-funcionarios')?.addEventListener('click', carregarFuncionariosEmpresa);
+  document.querySelector('#btn-atualizar-resultados')?.addEventListener('click', carregarResultadosEmpresa);
 });
