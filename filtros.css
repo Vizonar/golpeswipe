@@ -1,0 +1,40 @@
+.filters-bar {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) 220px;
+  gap: 1rem;
+  margin: 1rem 0;
+  padding: 1rem;
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.055);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.filters-bar label {
+  display: grid;
+  gap: 0.45rem;
+  font-size: 0.88rem;
+  opacity: 0.9;
+}
+
+.filters-bar input,
+.filters-bar select {
+  width: 100%;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 0.85rem;
+  padding: 0.75rem 0.9rem;
+  background: rgba(7, 12, 28, 0.74);
+  color: inherit;
+  outline: none;
+}
+
+.filters-bar input:focus,
+.filters-bar select:focus {
+  border-color: rgba(125, 211, 252, 0.78);
+  box-shadow: 0 0 0 3px rgba(125, 211, 252, 0.12);
+}
+
+@media (max-width: 720px) {
+  .filters-bar {
+    grid-template-columns: 1fr;
+  }
+}
