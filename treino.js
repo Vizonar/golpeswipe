@@ -10,6 +10,92 @@ const treinoState = {
   salvando: false,
 };
 
+function criarModalExplicacaoModo() {
+  if (document.querySelector('#modo-explicacao-modal')) return;
+
+  const modal = document.createElement('div');
+  modal.id = 'modo-explicacao-modal';
+  modal.className = 'modal-overlay';
+  modal.innerHTML = `
+    <div class="modal-card modo-explicacao-card" role="dialog" aria-modal="true" aria-labelledby="modo-explicacao-titulo">
+      <div class="modal-head">
+        <div>
+          <p id="modo-explicacao-etiqueta" class="eyebrow">Modo</p>
+          <h2 id="modo-explicacao-titulo">Antes de começar</h2>
+          <p id="modo-explicacao-subtitulo" class="muted"></p>
+        </div>
+        <button id="btn-fechar-explicacao-modo" class="btn btn-ghost" type="button">Fechar</button>
+      </div>
+      <div id="modo-explicacao-conteudo" class="modo-explicacao-conteudo"></div>
+      <div class="hero-actions center modo-explicacao-acoes">
+        <button id="btn-cancelar-explicacao-modo" class="btn btn-ghost" type="button">Voltar</button>
+        <button id="btn-iniciar-explicacao-modo" class="btn btn-primary" type="button">Começar</button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+  modal.querySelector('#btn-fechar-explicacao-modo')?.addEventListener('click', fecharExplicacaoModo);
+  modal.querySelector('#btn-cancelar-explicacao-modo')?.addEventListener('click', fecharExplicacaoModo);
+  modal.addEventListener('click', (event) => {
+    if (event.target === modal) fecharExplicacaoModo();
+  });
+}
+
+function fecharExplicacaoModo() {
+  document.querySelector('#modo-explicacao-modal')?.classList.remove('active');
+}
+
+function abrirExplicacaoModo(tipo) {
+  criarModalExplicacaoModo();
+
+  const config = tipo === 'maestria'
+    ? {
+        etiqueta: 'Teste de Maestria',
+        titulo: 'Antes de iniciar o Teste de Maestria',
+        subtitulo: 'Este é o modo avaliativo principal da plataforma.',
+        botao: 'Iniciar Teste de Maestria',
+        conteudo: `
+          <div class="modo-info-grid">
+            <article><strong>100 cenários</strong><span>Você responderá todo o repertório de perguntas.</span></article>
+            <article><strong>Sem feedback imediato</strong><span>As respostas são avaliadas no final para simular uma prova.</span></article>
+            <article><strong>Ranking da empresa</strong><span>O resultado final entra no ranking dos funcionários.</span></article>
+          </div>
+          <p>Leia cada cenário com atenção e decida se a situação apresentada representa um golpe ou uma situação segura. Você pode responder pelos botões ou deslizando o card para os lados.</p>
+        `,
+        iniciar: iniciarMaestria,
+      }
+    : {
+        etiqueta: 'Modo Treino',
+        titulo: 'Antes de começar o Treino',
+        subtitulo: 'Este modo serve para praticar e aprender com feedback imediato.',
+        botao: 'Começar Treino',
+        conteudo: `
+          <div class="modo-info-grid">
+            <article><strong>20 cenários</strong><span>As perguntas são escolhidas aleatoriamente a cada treino.</span></article>
+            <article><strong>Feedback imediato</strong><span>Após cada resposta, o sistema explica por que você acertou ou errou.</span></article>
+            <article><strong>Foco em aprendizado</strong><span>Use as dicas para melhorar antes do Teste de Maestria.</span></article>
+          </div>
+          <p>Você verá situações comuns envolvendo golpes digitais, mensagens suspeitas e cenários seguros. Responda se aquilo é golpe ou não é golpe.</p>
+        `,
+        iniciar: iniciarTreino,
+      };
+
+  document.querySelector('#modo-explicacao-etiqueta').textContent = config.etiqueta;
+  document.querySelector('#modo-explicacao-titulo').textContent = config.titulo;
+  document.querySelector('#modo-explicacao-subtitulo').textContent = config.subtitulo;
+  document.querySelector('#modo-explicacao-conteudo').innerHTML = config.conteudo;
+
+  const botao = document.querySelector('#btn-iniciar-explicacao-modo');
+  botao.textContent = config.botao;
+  botao.onclick = async () => {
+    fecharExplicacaoModo();
+    await config.iniciar();
+  };
+
+  document.querySelector('#modo-explicacao-modal')?.classList.add('active');
+}
+
 function treinoShuffle(lista) {
   return [...lista].sort(() => Math.random() - 0.5);
 }
@@ -198,11 +284,13 @@ async function treinoMostrarResultado() {
 }
 
 function setupTreinoSprint2() {
+  criarModalExplicacaoModo();
+
   document.querySelectorAll('[data-start="treino"]').forEach((button) => {
     button.addEventListener('click', (event) => {
       event.preventDefault();
       event.stopImmediatePropagation();
-      iniciarTreino();
+      abrirExplicacaoModo('treino');
     }, true);
   });
 
