@@ -30,6 +30,12 @@ function atualizarCardsResumoEmpresa() {
   if (statMedia) statMedia.textContent = `${media}%`;
 }
 
+function atualizarRelatoriosFinaisSeExistir() {
+  if (typeof atualizarTabelaRelatoriosFinais === 'function') {
+    atualizarTabelaRelatoriosFinais();
+  }
+}
+
 function garantirFiltrosResultadosEmpresa() {
   if (document.querySelector('#filtro-resultados-busca')) return;
 
@@ -68,6 +74,7 @@ async function carregarFuncionariosEmpresa() {
   if (!supabaseClient || !appState?.perfil || appState.perfil.tipo_usuario !== 'admin_empresa') {
     funcionariosEmpresaCache = [];
     atualizarCardsResumoEmpresa();
+    atualizarRelatoriosFinaisSeExistir();
     tbody.innerHTML = '<tr><td colspan="5">Apenas administradores da empresa podem ver esta lista.</td></tr>';
     return [];
   }
@@ -78,12 +85,14 @@ async function carregarFuncionariosEmpresa() {
     console.error('Erro ao carregar funcionários:', error);
     funcionariosEmpresaCache = [];
     atualizarCardsResumoEmpresa();
+    atualizarRelatoriosFinaisSeExistir();
     tbody.innerHTML = '<tr><td colspan="5">Não foi possível carregar os funcionários. Rode o SQL de atualização no Supabase.</td></tr>';
     return [];
   }
 
   funcionariosEmpresaCache = data || [];
   atualizarCardsResumoEmpresa();
+  atualizarRelatoriosFinaisSeExistir();
 
   if (funcionariosEmpresaCache.length === 0) {
     tbody.innerHTML = '<tr><td colspan="5">Nenhum funcionário cadastrado ainda.</td></tr>';
@@ -174,6 +183,7 @@ async function carregarResultadosEmpresa() {
   if (!supabaseClient || !appState?.perfil || appState.perfil.tipo_usuario !== 'admin_empresa') {
     resultadosEmpresaCache = [];
     atualizarCardsResumoEmpresa();
+    atualizarRelatoriosFinaisSeExistir();
     tbody.innerHTML = '<tr><td colspan="7">Apenas administradores da empresa podem ver os resultados.</td></tr>';
     return [];
   }
@@ -184,12 +194,14 @@ async function carregarResultadosEmpresa() {
     console.error('Erro ao carregar resultados:', error);
     resultadosEmpresaCache = [];
     atualizarCardsResumoEmpresa();
+    atualizarRelatoriosFinaisSeExistir();
     tbody.innerHTML = '<tr><td colspan="7">Não foi possível carregar os resultados. Rode o SQL de atualização no Supabase.</td></tr>';
     return [];
   }
 
   resultadosEmpresaCache = data || [];
   atualizarCardsResumoEmpresa();
+  atualizarRelatoriosFinaisSeExistir();
 
   if (resultadosEmpresaCache.length === 0) {
     tbody.innerHTML = '<tr><td colspan="7">Nenhum resultado registrado ainda. Finalize um treino para aparecer aqui.</td></tr>';
@@ -205,6 +217,7 @@ preencherDashboardEmpresa = async function preencherDashboardEmpresaComDados() {
   await preencherDashboardEmpresaOriginal();
   await carregarFuncionariosEmpresa();
   await carregarResultadosEmpresa();
+  atualizarRelatoriosFinaisSeExistir();
 };
 
 document.addEventListener('DOMContentLoaded', () => {
