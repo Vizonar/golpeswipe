@@ -1,0 +1,15 @@
+.desempenho-stats {
+  margin-bottom: 1.2rem;
+}
+
+.desempenho-card {
+  margin-top: 1rem;
+}
+
+.desempenho-menu-card {
+  border-color: rgba(34, 197, 94, 0.24) !important;
+}
+
+#view-meu-desempenho .dashboard-head {
+  gap: 1rem;
+}
