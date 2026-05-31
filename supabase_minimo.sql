@@ -85,6 +85,49 @@ join public.perfis p on p.id = tm.usuario_id
 join public.empresas e on e.id = tm.empresa_id
 where tm.finalizado = true;
 
+-- Função segura para o admin listar apenas funcionários da própria empresa.
+-- Evita policy recursiva em perfis.
+create or replace function public.listar_funcionarios_empresa()
+returns table (
+  id uuid,
+  nome text,
+  email text,
+  criado_em timestamp with time zone,
+  total_treinos bigint,
+  ultimo_treino timestamp with time zone,
+  melhor_maestria numeric
+)
+language sql
+security definer
+set search_path = public
+as $$
+  with admin_atual as (
+    select empresa_id
+    from public.perfis
+    where id = auth.uid()
+      and tipo_usuario = 'admin_empresa'
+    limit 1
+  )
+  select
+    p.id,
+    p.nome,
+    p.email,
+    p.criado_em,
+    count(st.id) filter (where st.finalizada = true) as total_treinos,
+    max(st.finalizada_em) as ultimo_treino,
+    max(tm.percentual) filter (where tm.finalizado = true) as melhor_maestria
+  from public.perfis p
+  join admin_atual a on a.empresa_id = p.empresa_id
+  left join public.sessoes_treino st on st.usuario_id = p.id
+  left join public.testes_maestria tm on tm.usuario_id = p.id
+  where p.tipo_usuario = 'funcionario'
+  group by p.id, p.nome, p.email, p.criado_em
+  order by p.criado_em desc;
+$$;
+
+revoke all on function public.listar_funcionarios_empresa() from public;
+grant execute on function public.listar_funcionarios_empresa() to authenticated;
+
 alter table public.empresas enable row level security;
 alter table public.perfis enable row level security;
 alter table public.sessoes_treino enable row level security;
@@ -113,8 +156,6 @@ for select
 to authenticated
 using (true);
 
--- Necessario para o cadastro de funcionario validar o codigo da empresa antes do login.
--- Para uma versao futura mais rigorosa, isso pode virar uma RPC security definer.
 create policy "empresas_select_anon_codigo"
 on public.empresas
 for select
@@ -128,8 +169,6 @@ to authenticated
 with check (true);
 
 -- PERFIS
--- Importante: estas policies nao consultam a propria tabela perfis dentro do USING.
--- Isso evita o erro infinite recursion detected in policy for relation perfis.
 create policy "perfis_select_own"
 on public.perfis
 for select
