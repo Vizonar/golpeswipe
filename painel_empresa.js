@@ -1,6 +1,15 @@
 // Painel da empresa: funcionários e histórico de resultados.
 // Usa RPCs security definer no Supabase para evitar policy recursiva em perfis.
 
+let resultadosEmpresaCache = [];
+
+function normalizarBusca(texto) {
+  return String(texto || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
+}
+
 async function carregarFuncionariosEmpresa() {
   const supabaseClient = getSupabaseClient();
   const tbody = document.querySelector('#funcionarios-tbody');
@@ -53,32 +62,16 @@ async function carregarFuncionariosEmpresa() {
   return data;
 }
 
-async function carregarResultadosEmpresa() {
-  const supabaseClient = getSupabaseClient();
+function renderizarResultadosEmpresa(lista) {
   const tbody = document.querySelector('#resultados-tbody');
+  if (!tbody) return;
 
-  if (!tbody) return [];
-  tbody.innerHTML = '<tr><td colspan="7">Carregando resultados...</td></tr>';
-
-  if (!supabaseClient || !appState?.perfil || appState.perfil.tipo_usuario !== 'admin_empresa') {
-    tbody.innerHTML = '<tr><td colspan="7">Apenas administradores da empresa podem ver os resultados.</td></tr>';
-    return [];
+  if (!lista || lista.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="7">Nenhum resultado encontrado com os filtros atuais.</td></tr>';
+    return;
   }
 
-  const { data, error } = await supabaseClient.rpc('listar_resultados_empresa');
-
-  if (error) {
-    console.error('Erro ao carregar resultados:', error);
-    tbody.innerHTML = '<tr><td colspan="7">Não foi possível carregar os resultados. Rode o SQL de atualização no Supabase.</td></tr>';
-    return [];
-  }
-
-  if (!data || data.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="7">Nenhum resultado registrado ainda. Finalize um treino para aparecer aqui.</td></tr>';
-    return [];
-  }
-
-  tbody.innerHTML = data.map((resultado) => {
+  tbody.innerHTML = lista.map((resultado) => {
     const dataFinalizacao = resultado.finalizado_em
       ? new Date(resultado.finalizado_em).toLocaleString('pt-BR')
       : '-';
@@ -99,8 +92,51 @@ async function carregarResultadosEmpresa() {
       </tr>
     `;
   }).join('');
+}
 
-  return data;
+function aplicarFiltrosResultadosEmpresa() {
+  const busca = normalizarBusca(document.querySelector('#filtro-resultados-busca')?.value || '');
+  const tipo = document.querySelector('#filtro-resultados-tipo')?.value || 'todos';
+
+  const filtrados = resultadosEmpresaCache.filter((resultado) => {
+    const texto = normalizarBusca(`${resultado.funcionario} ${resultado.email}`);
+    const passaBusca = !busca || texto.includes(busca);
+    const passaTipo = tipo === 'todos' || resultado.tipo === tipo;
+    return passaBusca && passaTipo;
+  });
+
+  renderizarResultadosEmpresa(filtrados);
+}
+
+async function carregarResultadosEmpresa() {
+  const supabaseClient = getSupabaseClient();
+  const tbody = document.querySelector('#resultados-tbody');
+
+  if (!tbody) return [];
+  tbody.innerHTML = '<tr><td colspan="7">Carregando resultados...</td></tr>';
+
+  if (!supabaseClient || !appState?.perfil || appState.perfil.tipo_usuario !== 'admin_empresa') {
+    tbody.innerHTML = '<tr><td colspan="7">Apenas administradores da empresa podem ver os resultados.</td></tr>';
+    return [];
+  }
+
+  const { data, error } = await supabaseClient.rpc('listar_resultados_empresa');
+
+  if (error) {
+    console.error('Erro ao carregar resultados:', error);
+    tbody.innerHTML = '<tr><td colspan="7">Não foi possível carregar os resultados. Rode o SQL de atualização no Supabase.</td></tr>';
+    return [];
+  }
+
+  resultadosEmpresaCache = data || [];
+
+  if (resultadosEmpresaCache.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="7">Nenhum resultado registrado ainda. Finalize um treino para aparecer aqui.</td></tr>';
+    return [];
+  }
+
+  aplicarFiltrosResultadosEmpresa();
+  return resultadosEmpresaCache;
 }
 
 // Sobrescreve a função original para incluir dados administrativos no painel.
@@ -114,4 +150,6 @@ preencherDashboardEmpresa = async function preencherDashboardEmpresaComDados() {
 document.addEventListener('DOMContentLoaded', () => {
   document.querySelector('#btn-atualizar-funcionarios')?.addEventListener('click', carregarFuncionariosEmpresa);
   document.querySelector('#btn-atualizar-resultados')?.addEventListener('click', carregarResultadosEmpresa);
+  document.querySelector('#filtro-resultados-busca')?.addEventListener('input', aplicarFiltrosResultadosEmpresa);
+  document.querySelector('#filtro-resultados-tipo')?.addEventListener('change', aplicarFiltrosResultadosEmpresa);
 });
