@@ -6,6 +6,59 @@
   gap: 1rem;
 }
 
+#view-menu-principal .dashboard-head {
+  align-items: flex-start;
+}
+
+.settings-gear {
+  width: 2.8rem;
+  height: 2.8rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  border-radius: 999px;
+  border: 1px solid rgba(56, 189, 248, 0.34);
+  background: rgba(56, 189, 248, 0.1);
+  color: inherit;
+  font-size: 1.25rem;
+  cursor: pointer;
+  box-shadow: 0 0 18px rgba(56, 189, 248, 0.18);
+  transition: transform 0.16s ease, border-color 0.16s ease, background 0.16s ease;
+}
+
+.settings-gear:hover {
+  transform: rotate(24deg) scale(1.05);
+  border-color: rgba(56, 189, 248, 0.82);
+  background: rgba(56, 189, 248, 0.18);
+}
+
+.config-modal {
+  width: min(920px, 100%);
+}
+
+.config-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.config-box {
+  padding: 1rem;
+  border-radius: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.055);
+}
+
+.config-box h3 {
+  margin: 0;
+}
+
+.small-note {
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
 .menu-grid {
   align-items: stretch;
 }
@@ -174,6 +227,10 @@
   .main-nav {
     width: 100%;
     justify-content: flex-start;
+  }
+
+  .config-grid {
+    grid-template-columns: 1fr;
   }
 
   .answer-actions {
