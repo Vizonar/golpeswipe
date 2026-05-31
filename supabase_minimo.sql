@@ -85,8 +85,6 @@ join public.perfis p on p.id = tm.usuario_id
 join public.empresas e on e.id = tm.empresa_id
 where tm.finalizado = true;
 
--- Função segura para o admin listar apenas funcionários da própria empresa.
--- Evita policy recursiva em perfis.
 create or replace function public.listar_funcionarios_empresa()
 returns table (
   id uuid,
@@ -128,6 +126,71 @@ $$;
 revoke all on function public.listar_funcionarios_empresa() from public;
 grant execute on function public.listar_funcionarios_empresa() to authenticated;
 
+create or replace function public.listar_resultados_empresa()
+returns table (
+  tipo text,
+  funcionario text,
+  email text,
+  acertos integer,
+  total_perguntas integer,
+  percentual numeric,
+  nivel_resultado text,
+  finalizado_em timestamp with time zone
+)
+language sql
+security definer
+set search_path = public
+as $$
+  with admin_atual as (
+    select empresa_id
+    from public.perfis
+    where id = auth.uid()
+      and tipo_usuario = 'admin_empresa'
+    limit 1
+  ), resultados as (
+    select
+      'Treino'::text as tipo,
+      p.nome as funcionario,
+      p.email,
+      st.acertos,
+      st.total_perguntas,
+      round((st.acertos::numeric / nullif(st.total_perguntas, 0)::numeric) * 100, 2) as percentual,
+      case
+        when round((st.acertos::numeric / nullif(st.total_perguntas, 0)::numeric) * 100, 2) >= 85 then 'Excelente'
+        when round((st.acertos::numeric / nullif(st.total_perguntas, 0)::numeric) * 100, 2) >= 70 then 'Bom conhecimento'
+        when round((st.acertos::numeric / nullif(st.total_perguntas, 0)::numeric) * 100, 2) >= 50 then 'Atenção necessária'
+        else 'Iniciante'
+      end as nivel_resultado,
+      st.finalizada_em as finalizado_em
+    from public.sessoes_treino st
+    join public.perfis p on p.id = st.usuario_id
+    join admin_atual a on a.empresa_id = st.empresa_id
+    where st.finalizada = true
+
+    union all
+
+    select
+      'Teste de Maestria'::text as tipo,
+      p.nome as funcionario,
+      p.email,
+      tm.acertos,
+      tm.total_perguntas,
+      tm.percentual,
+      tm.nivel_resultado,
+      tm.finalizado_em
+    from public.testes_maestria tm
+    join public.perfis p on p.id = tm.usuario_id
+    join admin_atual a on a.empresa_id = tm.empresa_id
+    where tm.finalizado = true
+  )
+  select * from resultados
+  order by finalizado_em desc nulls last
+  limit 100;
+$$;
+
+revoke all on function public.listar_resultados_empresa() from public;
+grant execute on function public.listar_resultados_empresa() to authenticated;
+
 alter table public.empresas enable row level security;
 alter table public.perfis enable row level security;
 alter table public.sessoes_treino enable row level security;
@@ -135,7 +198,7 @@ alter table public.respostas_treino enable row level security;
 alter table public.testes_maestria enable row level security;
 alter table public.respostas_maestria enable row level security;
 
--- Limpeza de policies antigas, inclusive as que causam recursao infinita.
+-- Policies principais mantidas abaixo.
 drop policy if exists "usuarios autenticados criam empresa" on public.empresas;
 drop policy if exists "usuarios veem empresas pelo codigo para cadastro" on public.empresas;
 drop policy if exists "usuarios autenticados podem criar empresas" on public.empresas;
@@ -149,108 +212,22 @@ drop policy if exists "usuario pode criar o proprio perfil" on public.perfis;
 drop policy if exists "usuario pode ver o proprio perfil" on public.perfis;
 drop policy if exists "usuario pode atualizar o proprio perfil" on public.perfis;
 
--- EMPRESAS
-create policy "empresas_select_authenticated"
-on public.empresas
-for select
-to authenticated
-using (true);
-
-create policy "empresas_select_anon_codigo"
-on public.empresas
-for select
-to anon
-using (true);
-
-create policy "empresas_insert_authenticated"
-on public.empresas
-for insert
-to authenticated
-with check (true);
-
--- PERFIS
-create policy "perfis_select_own"
-on public.perfis
-for select
-to authenticated
-using (id = auth.uid());
-
-create policy "perfis_insert_own"
-on public.perfis
-for insert
-to authenticated
-with check (id = auth.uid());
-
-create policy "perfis_update_own"
-on public.perfis
-for update
-to authenticated
-using (id = auth.uid())
-with check (id = auth.uid());
-
--- TREINO
-create policy "sessoes_treino_insert_own"
-on public.sessoes_treino
-for insert
-to authenticated
-with check (usuario_id = auth.uid());
-
-create policy "sessoes_treino_select_own"
-on public.sessoes_treino
-for select
-to authenticated
-using (usuario_id = auth.uid());
-
-create policy "sessoes_treino_update_own"
-on public.sessoes_treino
-for update
-to authenticated
-using (usuario_id = auth.uid())
-with check (usuario_id = auth.uid());
-
-create policy "respostas_treino_insert_own"
-on public.respostas_treino
-for insert
-to authenticated
-with check (usuario_id = auth.uid());
-
-create policy "respostas_treino_select_own"
-on public.respostas_treino
-for select
-to authenticated
-using (usuario_id = auth.uid());
-
--- MAESTRIA
-create policy "testes_maestria_insert_own"
-on public.testes_maestria
-for insert
-to authenticated
-with check (usuario_id = auth.uid());
-
-create policy "testes_maestria_select_own_or_company_basic"
-on public.testes_maestria
-for select
-to authenticated
-using (usuario_id = auth.uid());
-
-create policy "testes_maestria_update_own"
-on public.testes_maestria
-for update
-to authenticated
-using (usuario_id = auth.uid())
-with check (usuario_id = auth.uid());
-
-create policy "respostas_maestria_insert_own"
-on public.respostas_maestria
-for insert
-to authenticated
-with check (usuario_id = auth.uid());
-
-create policy "respostas_maestria_select_own"
-on public.respostas_maestria
-for select
-to authenticated
-using (usuario_id = auth.uid());
+create policy "empresas_select_authenticated" on public.empresas for select to authenticated using (true);
+create policy "empresas_select_anon_codigo" on public.empresas for select to anon using (true);
+create policy "empresas_insert_authenticated" on public.empresas for insert to authenticated with check (true);
+create policy "perfis_select_own" on public.perfis for select to authenticated using (id = auth.uid());
+create policy "perfis_insert_own" on public.perfis for insert to authenticated with check (id = auth.uid());
+create policy "perfis_update_own" on public.perfis for update to authenticated using (id = auth.uid()) with check (id = auth.uid());
+create policy "sessoes_treino_insert_own" on public.sessoes_treino for insert to authenticated with check (usuario_id = auth.uid());
+create policy "sessoes_treino_select_own" on public.sessoes_treino for select to authenticated using (usuario_id = auth.uid());
+create policy "sessoes_treino_update_own" on public.sessoes_treino for update to authenticated using (usuario_id = auth.uid()) with check (usuario_id = auth.uid());
+create policy "respostas_treino_insert_own" on public.respostas_treino for insert to authenticated with check (usuario_id = auth.uid());
+create policy "respostas_treino_select_own" on public.respostas_treino for select to authenticated using (usuario_id = auth.uid());
+create policy "testes_maestria_insert_own" on public.testes_maestria for insert to authenticated with check (usuario_id = auth.uid());
+create policy "testes_maestria_select_own_or_company_basic" on public.testes_maestria for select to authenticated using (usuario_id = auth.uid());
+create policy "testes_maestria_update_own" on public.testes_maestria for update to authenticated using (usuario_id = auth.uid()) with check (usuario_id = auth.uid());
+create policy "respostas_maestria_insert_own" on public.respostas_maestria for insert to authenticated with check (usuario_id = auth.uid());
+create policy "respostas_maestria_select_own" on public.respostas_maestria for select to authenticated using (usuario_id = auth.uid());
 
 create index if not exists idx_perfis_empresa on public.perfis(empresa_id);
 create index if not exists idx_empresas_codigo on public.empresas(codigo_empresa);
