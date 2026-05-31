@@ -10,6 +10,34 @@ function normalizarBusca(texto) {
     .replace(/[\u0300-\u036f]/g, '');
 }
 
+function garantirFiltrosResultadosEmpresa() {
+  if (document.querySelector('#filtro-resultados-busca')) return;
+
+  const tabela = document.querySelector('#resultados-tbody')?.closest('.table-wrap');
+  if (!tabela) return;
+
+  const filtros = document.createElement('div');
+  filtros.className = 'filters-bar';
+  filtros.innerHTML = `
+    <label>
+      Buscar funcionário ou e-mail
+      <input id="filtro-resultados-busca" type="search" placeholder="Ex: ana@empresa.com" />
+    </label>
+    <label>
+      Tipo de resultado
+      <select id="filtro-resultados-tipo">
+        <option value="todos">Todos</option>
+        <option value="Treino">Treino</option>
+        <option value="Teste de Maestria">Teste de Maestria</option>
+      </select>
+    </label>
+  `;
+
+  tabela.parentElement.insertBefore(filtros, tabela);
+  document.querySelector('#filtro-resultados-busca')?.addEventListener('input', aplicarFiltrosResultadosEmpresa);
+  document.querySelector('#filtro-resultados-tipo')?.addEventListener('change', aplicarFiltrosResultadosEmpresa);
+}
+
 async function carregarFuncionariosEmpresa() {
   const supabaseClient = getSupabaseClient();
   const tbody = document.querySelector('#funcionarios-tbody');
@@ -109,6 +137,7 @@ function aplicarFiltrosResultadosEmpresa() {
 }
 
 async function carregarResultadosEmpresa() {
+  garantirFiltrosResultadosEmpresa();
   const supabaseClient = getSupabaseClient();
   const tbody = document.querySelector('#resultados-tbody');
 
@@ -139,7 +168,6 @@ async function carregarResultadosEmpresa() {
   return resultadosEmpresaCache;
 }
 
-// Sobrescreve a função original para incluir dados administrativos no painel.
 const preencherDashboardEmpresaOriginal = preencherDashboardEmpresa;
 preencherDashboardEmpresa = async function preencherDashboardEmpresaComDados() {
   await preencherDashboardEmpresaOriginal();
@@ -150,6 +178,4 @@ preencherDashboardEmpresa = async function preencherDashboardEmpresaComDados() {
 document.addEventListener('DOMContentLoaded', () => {
   document.querySelector('#btn-atualizar-funcionarios')?.addEventListener('click', carregarFuncionariosEmpresa);
   document.querySelector('#btn-atualizar-resultados')?.addEventListener('click', carregarResultadosEmpresa);
-  document.querySelector('#filtro-resultados-busca')?.addEventListener('input', aplicarFiltrosResultadosEmpresa);
-  document.querySelector('#filtro-resultados-tipo')?.addEventListener('change', aplicarFiltrosResultadosEmpresa);
 });
