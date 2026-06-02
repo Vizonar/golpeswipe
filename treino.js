@@ -51,13 +51,13 @@ function abrirExplicacaoModo(tipo) {
 
   const config = tipo === 'maestria'
     ? {
-        etiqueta: 'Teste de Maestria',
-        titulo: 'Antes de iniciar o Teste de Maestria',
+        etiqueta: 'Teste Completo',
+        titulo: 'Antes de iniciar o Teste Completo',
         subtitulo: 'Este é o modo avaliativo principal da plataforma.',
-        botao: 'Iniciar Teste de Maestria',
+        botao: 'Iniciar Teste Completo',
         conteudo: `
           <div class="modo-info-grid">
-            <article><strong>100 cenários</strong><span>Você responderá todo o repertório de perguntas.</span></article>
+            <article><strong>100 cenários</strong><span>Você responderá todo o repertório de perguntas em ordem aleatória.</span></article>
             <article><strong>Sem feedback imediato</strong><span>As respostas são avaliadas no final para simular uma prova.</span></article>
             <article><strong>Ranking da empresa</strong><span>O resultado final entra no ranking dos funcionários.</span></article>
           </div>
@@ -74,7 +74,7 @@ function abrirExplicacaoModo(tipo) {
           <div class="modo-info-grid">
             <article><strong>20 cenários</strong><span>As perguntas são escolhidas aleatoriamente a cada treino.</span></article>
             <article><strong>Feedback imediato</strong><span>Após cada resposta, o sistema explica por que você acertou ou errou.</span></article>
-            <article><strong>Foco em aprendizado</strong><span>Use as dicas para melhorar antes do Teste de Maestria.</span></article>
+            <article><strong>Foco em aprendizado</strong><span>Use as dicas para melhorar antes do Teste Completo.</span></article>
           </div>
           <p>Você verá situações comuns envolvendo golpes digitais, mensagens suspeitas e cenários seguros. Responda se aquilo é golpe ou não é golpe.</p>
         `,
