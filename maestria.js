@@ -1,4 +1,4 @@
-// Teste de Maestria - 100 perguntas, sem feedback imediato, salvando no ranking.
+// Teste Completo - 100 perguntas, sem feedback imediato, salvando no ranking.
 
 const maestriaState = {
   perguntas: [],
@@ -10,7 +10,12 @@ const maestriaState = {
 };
 
 function maestriaShuffle(lista) {
-  return [...lista].sort(() => Math.random() - 0.5);
+  const copia = [...lista];
+  for (let i = copia.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copia[i], copia[j]] = [copia[j], copia[i]];
+  }
+  return copia;
 }
 
 function maestriaNivel(percentual) {
@@ -44,7 +49,7 @@ async function maestriaCriarTeste() {
     .single();
 
   if (error) {
-    console.warn('Não foi possível criar Teste de Maestria:', error);
+    console.warn('Não foi possível criar Teste Completo:', error);
     return null;
   }
 
@@ -105,7 +110,7 @@ function maestriaRenderizarPergunta() {
 
 async function iniciarMaestria() {
   if (!appState?.perfil) {
-    showToast('Faça login para iniciar o Teste de Maestria.', 'error');
+    showToast('Faça login para iniciar o Teste Completo.', 'error');
     showView('login');
     return;
   }
@@ -153,7 +158,7 @@ async function maestriaMostrarResultado() {
   const percentual = total ? Math.round((maestriaState.acertos / total) * 100) : 0;
   const nivel = maestriaNivel(percentual);
 
-  document.querySelector('#resultado-titulo').textContent = 'Teste de Maestria concluído!';
+  document.querySelector('#resultado-titulo').textContent = 'Teste Completo concluído!';
   document.querySelector('#resultado-acertos').textContent = maestriaState.acertos;
   document.querySelector('#resultado-total').textContent = total;
   document.querySelector('#resultado-percentual').textContent = `Você acertou ${percentual}% dos cenários.`;
@@ -169,7 +174,7 @@ async function maestriaMostrarResultado() {
         ${item.pergunta.dica}
       </div>
     `).join('')
-    : '<div class="review-item"><strong>Perfeito!</strong><br />Você acertou todos os cenários do Teste de Maestria.</div>';
+    : '<div class="review-item"><strong>Perfeito!</strong><br />Você acertou todos os cenários do Teste Completo.</div>';
 
   showView('resultado');
 }
