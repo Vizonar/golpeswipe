@@ -156,9 +156,9 @@ function montarMenuPrincipalEmColunas() {
       </article>
       <article class="action-card highlight menu-card-compact">
         <span class="badge">100 perguntas</span>
-        <h3>Teste de Maestria</h3>
+        <h3>Teste Completo</h3>
         <p>Responda o repertório completo. O resultado é salvo no ranking da empresa.</p>
-        <button class="btn btn-primary full" data-start="maestria" type="button">Iniciar maestria</button>
+        <button class="btn btn-primary full" data-start="maestria" type="button">Iniciar teste completo</button>
       </article>
     </div>
 
@@ -174,7 +174,7 @@ function montarMenuPrincipalEmColunas() {
       <article class="action-card help-card menu-card-compact">
         <span class="badge">Guia</span>
         <h3>Como funciona</h3>
-        <p>Veja o fluxo do projeto: empresa, funcionário, treino, maestria e ranking.</p>
+        <p>Veja o fluxo do projeto: empresa, funcionário, treino, teste completo e ranking.</p>
         <button id="btn-como-funciona-card" class="btn btn-ghost full" type="button">Abrir guia</button>
       </article>
     </div>
@@ -185,7 +185,7 @@ function montarMenuPrincipalEmColunas() {
       <article class="action-card menu-card-compact">
         <span class="badge">Ranking</span>
         <h3>Ranking da equipe</h3>
-        <p>Veja a classificação por Teste de Maestria finalizado.</p>
+        <p>Veja a classificação por Teste Completo finalizado.</p>
         <button class="btn btn-ghost full" data-view="ranking" type="button">Ver ranking</button>
       </article>
       <article class="action-card nav-funcionario desempenho-menu-card menu-card-compact">
