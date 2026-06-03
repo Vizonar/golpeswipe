@@ -1,5 +1,5 @@
 // Sprint 2 - Modo Treino funcional
-// Usa as 100 perguntas fixas de perguntas.js e não depende de perguntas no banco.
+// Usa as perguntas fixas e as questões personalizadas cadastradas pela empresa.
 
 const treinoState = {
   perguntas: [],
@@ -57,7 +57,7 @@ function abrirExplicacaoModo(tipo) {
         botao: 'Iniciar Teste Completo',
         conteudo: `
           <div class="modo-info-grid">
-            <article><strong>100 cenários</strong><span>Você responderá todo o repertório de perguntas em ordem aleatória.</span></article>
+            <article><strong>100 cenários</strong><span>Você responderá o repertório completo em ordem aleatória.</span></article>
             <article><strong>Sem feedback imediato</strong><span>As respostas são avaliadas no final para simular uma prova.</span></article>
             <article><strong>Ranking da empresa</strong><span>O resultado final entra no ranking dos funcionários.</span></article>
           </div>
@@ -97,7 +97,12 @@ function abrirExplicacaoModo(tipo) {
 }
 
 function treinoShuffle(lista) {
-  return [...lista].sort(() => Math.random() - 0.5);
+  const copia = [...lista];
+  for (let i = copia.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copia[i], copia[j]] = [copia[j], copia[i]];
+  }
+  return copia;
 }
 
 function treinoNivel(acertos, total) {
@@ -161,7 +166,7 @@ async function treinoSalvarResposta(pergunta, respostaUsuario, acertou) {
   await client.from('respostas_treino').insert({
     sessao_id: treinoState.sessaoId,
     usuario_id: perfil.id,
-    pergunta_codigo: pergunta.codigo,
+    pergunta_codigo: String(pergunta.codigo),
     resposta_usuario: respostaUsuario,
     acertou,
   });
@@ -197,12 +202,17 @@ function treinoRenderizarPergunta() {
 }
 
 async function iniciarTreino() {
-  if (!window.GOLPESWIPE_PERGUNTAS || window.GOLPESWIPE_PERGUNTAS.length < 20) {
+  if (typeof carregarQuestoesEmpresa === 'function') await carregarQuestoesEmpresa();
+  const repertorio = typeof obterRepertorioGolpeSwipe === 'function'
+    ? obterRepertorioGolpeSwipe()
+    : window.GOLPESWIPE_PERGUNTAS;
+
+  if (!repertorio || repertorio.length < 20) {
     showToast('Repertório de perguntas não carregado.', 'error');
     return;
   }
 
-  treinoState.perguntas = treinoShuffle(window.GOLPESWIPE_PERGUNTAS).slice(0, 20);
+  treinoState.perguntas = treinoShuffle(repertorio).slice(0, 20);
   treinoState.indice = 0;
   treinoState.acertos = 0;
   treinoState.respostas = [];
