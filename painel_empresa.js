@@ -4,6 +4,14 @@
 let resultadosEmpresaCache = [];
 let funcionariosEmpresaCache = [];
 
+function carregarModuloQuestoesEmpresa() {
+  if (document.querySelector('script[data-modulo="questoes-empresa"]')) return;
+  const script = document.createElement('script');
+  script.src = 'questoes_empresa.js';
+  script.dataset.modulo = 'questoes-empresa';
+  document.body.appendChild(script);
+}
+
 function normalizarBusca(texto) {
   return String(texto || '')
     .toLowerCase()
@@ -18,10 +26,10 @@ function atualizarCardsResumoEmpresa() {
 
   if (statFuncionarios) statFuncionarios.textContent = funcionariosEmpresaCache.length || 0;
 
-  const testesMaestria = resultadosEmpresaCache.filter((item) => item.tipo === 'Teste de Maestria');
-  const baseMedia = testesMaestria.length ? testesMaestria : resultadosEmpresaCache;
+  const testesCompletos = resultadosEmpresaCache.filter((item) => item.tipo === 'Teste de Maestria' || item.tipo === 'Teste Completo');
+  const baseMedia = testesCompletos.length ? testesCompletos : resultadosEmpresaCache;
 
-  if (statTestes) statTestes.textContent = testesMaestria.length || 0;
+  if (statTestes) statTestes.textContent = testesCompletos.length || 0;
 
   const media = baseMedia.length
     ? Math.round(baseMedia.reduce((sum, item) => sum + Number(item.percentual || 0), 0) / baseMedia.length)
@@ -54,7 +62,7 @@ function garantirFiltrosResultadosEmpresa() {
       <select id="filtro-resultados-tipo">
         <option value="todos">Todos</option>
         <option value="Treino">Treino</option>
-        <option value="Teste de Maestria">Teste de Maestria</option>
+        <option value="Teste de Maestria">Teste Completo</option>
       </select>
     </label>
   `;
@@ -108,7 +116,7 @@ async function carregarFuncionariosEmpresa() {
       ? new Date(funcionario.ultimo_treino).toLocaleDateString('pt-BR')
       : 'Sem treino';
 
-    const melhorMaestria = funcionario.melhor_maestria !== null && funcionario.melhor_maestria !== undefined
+    const melhorTeste = funcionario.melhor_maestria !== null && funcionario.melhor_maestria !== undefined
       ? `${Number(funcionario.melhor_maestria).toFixed(0)}%`
       : 'Sem teste';
 
@@ -118,7 +126,7 @@ async function carregarFuncionariosEmpresa() {
         <td>${funcionario.email}</td>
         <td>${dataCadastro}</td>
         <td>${funcionario.total_treinos || 0} treino(s) • ${ultimoTreino}</td>
-        <td>${melhorMaestria}</td>
+        <td>${melhorTeste}</td>
       </tr>
     `;
   }).join('');
@@ -144,9 +152,11 @@ function renderizarResultadosEmpresa(lista) {
       ? `${Number(resultado.percentual).toFixed(0)}%`
       : '-';
 
+    const tipo = resultado.tipo === 'Teste de Maestria' ? 'Teste Completo' : resultado.tipo;
+
     return `
       <tr>
-        <td>${resultado.tipo}</td>
+        <td>${tipo}</td>
         <td>${resultado.funcionario}</td>
         <td>${resultado.email}</td>
         <td>${resultado.acertos}/${resultado.total_perguntas}</td>
@@ -165,7 +175,7 @@ function aplicarFiltrosResultadosEmpresa() {
   const filtrados = resultadosEmpresaCache.filter((resultado) => {
     const texto = normalizarBusca(`${resultado.funcionario} ${resultado.email}`);
     const passaBusca = !busca || texto.includes(busca);
-    const passaTipo = tipo === 'todos' || resultado.tipo === tipo;
+    const passaTipo = tipo === 'todos' || resultado.tipo === tipo || (tipo === 'Teste de Maestria' && resultado.tipo === 'Teste Completo');
     return passaBusca && passaTipo;
   });
 
@@ -218,9 +228,14 @@ preencherDashboardEmpresa = async function preencherDashboardEmpresaComDados() {
   await carregarFuncionariosEmpresa();
   await carregarResultadosEmpresa();
   atualizarRelatoriosFinaisSeExistir();
+  if (typeof criarPainelQuestoesEmpresa === 'function') {
+    criarPainelQuestoesEmpresa();
+    await carregarQuestoesEmpresa();
+  }
 };
 
 document.addEventListener('DOMContentLoaded', () => {
+  carregarModuloQuestoesEmpresa();
   document.querySelector('#btn-atualizar-funcionarios')?.addEventListener('click', carregarFuncionariosEmpresa);
   document.querySelector('#btn-atualizar-resultados')?.addEventListener('click', carregarResultadosEmpresa);
 });
