@@ -85,6 +85,17 @@ function criarComoFuncionaModal() {
         </div>
       </div>
 
+      <div class="help-section-block">
+        <h3>Roteiro recomendado para apresentação</h3>
+        <div class="presentation-flow">
+          <div><strong>1.</strong> Apresente a tela inicial e explique o problema dos golpes digitais.</div>
+          <div><strong>2.</strong> Mostre o cadastro da empresa e o código usado pelos funcionários.</div>
+          <div><strong>3.</strong> Abra o Treino Rápido e destaque o feedback educativo.</div>
+          <div><strong>4.</strong> Mostre o Teste Completo como avaliação final.</div>
+          <div><strong>5.</strong> Finalize com Ranking, Painel da Empresa e Relatórios Finais.</div>
+        </div>
+      </div>
+
       <div class="help-note">
         <strong>Ideia central:</strong> transformar a conscientização sobre golpes digitais em uma experiência interativa, mensurável e útil para pequenas empresas, unindo simulação, gamificação, feedback educativo e acompanhamento gerencial.
       </div>
@@ -130,8 +141,14 @@ function injetarMelhoriasFinaisCss() {
     .help-grid-expanded { grid-template-columns: repeat(3, minmax(0, 1fr)); }
     .secondary-step { border-color: rgba(56, 189, 248, 0.18) !important; background: rgba(56, 189, 248, 0.055) !important; }
     .soft-note { margin-top: 0.8rem; background: rgba(34, 197, 94, 0.08) !important; border-color: rgba(34, 197, 94, 0.22) !important; }
+    .presentation-flow { display: grid; gap: 0.65rem; }
+    .presentation-flow div { padding: 0.85rem 1rem; border-radius: 0.9rem; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.045); }
     .final-polish-actions { display: flex; gap: 0.8rem; flex-wrap: wrap; justify-content: center; margin-top: 1rem; }
     .final-mini-badge { display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.35rem 0.65rem; border-radius: 999px; border: 1px solid rgba(56, 189, 248, 0.22); background: rgba(56, 189, 248, 0.08); font-size: 0.85rem; opacity: 0.9; }
+    .presentation-checklist { margin: 1rem 0; padding: 1rem; border-radius: 1rem; border: 1px solid rgba(56, 189, 248, 0.18); background: rgba(56, 189, 248, 0.055); }
+    .presentation-checklist h3 { margin-top: 0; }
+    .presentation-checklist ul { margin: 0; padding-left: 1.2rem; line-height: 1.65; }
+    .result-context-note { margin: 1rem auto 0; max-width: 720px; padding: 0.9rem 1rem; border-radius: 1rem; border: 1px solid rgba(56, 189, 248, 0.18); background: rgba(56, 189, 248, 0.07); line-height: 1.55; }
     #btn-abrir-questoes-empresa { white-space: nowrap; }
     #view-dashboard-empresa .dashboard-head { flex-wrap: wrap; }
     .questoes-modal { width: min(980px, 100%); }
@@ -145,7 +162,19 @@ function injetarMelhoriasFinaisCss() {
 
 function adicionarBotoesResultado() {
   const resultCard = document.querySelector('#view-resultado .result-card');
-  if (!resultCard || document.querySelector('#final-polish-actions')) return;
+  if (!resultCard) return;
+
+  if (!document.querySelector('#result-context-note')) {
+    const note = document.createElement('div');
+    note.id = 'result-context-note';
+    note.className = 'result-context-note';
+    note.innerHTML = '<strong>Próximo passo:</strong> use este resultado para revisar os pontos de erro. No caso do Teste Completo, a pontuação também pode ser acompanhada no ranking e nos relatórios da empresa.';
+    const detalhes = document.querySelector('#resultado-detalhes');
+    if (detalhes) resultCard.insertBefore(note, detalhes);
+    else resultCard.appendChild(note);
+  }
+
+  if (document.querySelector('#final-polish-actions')) return;
 
   const actions = document.createElement('div');
   actions.id = 'final-polish-actions';
@@ -181,6 +210,29 @@ function garantirBotaoQuestoesEmpresa() {
   }, 600);
 }
 
+function inserirChecklistApresentacao() {
+  const dashboard = document.querySelector('#view-dashboard-empresa');
+  if (!dashboard || document.querySelector('#presentation-checklist')) return;
+
+  const statsGrid = dashboard.querySelector('.stats-grid');
+  const checklist = document.createElement('div');
+  checklist.id = 'presentation-checklist';
+  checklist.className = 'presentation-checklist';
+  checklist.innerHTML = `
+    <h3>Checklist rápido para demonstração</h3>
+    <ul>
+      <li>Confirme se há ao menos um funcionário cadastrado.</li>
+      <li>Finalize um Treino Rápido para mostrar aprendizado com feedback.</li>
+      <li>Finalize um Teste Completo para alimentar ranking e relatórios.</li>
+      <li>Use “Questões da empresa” para mostrar personalização do conteúdo.</li>
+      <li>Abra “Relatórios finais” para apresentar análise geral e individual.</li>
+    </ul>
+  `;
+
+  if (statsGrid?.parentNode) statsGrid.parentNode.insertBefore(checklist, statsGrid.nextSibling);
+  else dashboard.appendChild(checklist);
+}
+
 function atualizarLabelsVisuaisFinais() {
   document.querySelectorAll('*').forEach((el) => {
     if (el.childNodes.length === 1 && el.childNodes[0].nodeType === Node.TEXT_NODE) {
@@ -198,13 +250,15 @@ function instalarMelhoriasFinais() {
   injetarMelhoriasFinaisCss();
   melhorarTelaResultadoPeriodicamente();
   garantirBotaoQuestoesEmpresa();
+  inserirChecklistApresentacao();
   atualizarLabelsVisuaisFinais();
 
   document.addEventListener('click', (event) => {
     const target = event.target;
     if (target?.matches?.('[data-view="dashboard-empresa"]')) {
       setTimeout(garantirBotaoQuestoesEmpresa, 250);
-      setTimeout(atualizarLabelsVisuaisFinais, 300);
+      setTimeout(inserirChecklistApresentacao, 300);
+      setTimeout(atualizarLabelsVisuaisFinais, 350);
     }
     if (target?.matches?.('[data-view="menu-principal"]')) {
       setTimeout(() => {
@@ -220,6 +274,7 @@ function instalarMelhoriasFinais() {
 
   setInterval(() => {
     garantirBotaoQuestoesEmpresa();
+    inserirChecklistApresentacao();
     adicionarBotoesResultado();
     atualizarLabelsVisuaisFinais();
   }, 2500);
