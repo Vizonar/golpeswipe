@@ -30,7 +30,7 @@ function maestriaGetPergunta() {
   return maestriaState.perguntas[maestriaState.indice];
 }
 
-async function maestriaCriarTeste() {
+async function maestriaCriarTeste(totalPerguntas = 100) {
   const client = getSupabaseClient();
   if (!client || !appState?.perfil?.id || !appState?.perfil?.empresa_id) return null;
 
@@ -39,7 +39,7 @@ async function maestriaCriarTeste() {
     .insert({
       usuario_id: appState.perfil.id,
       empresa_id: appState.perfil.empresa_id,
-      total_perguntas: 100,
+      total_perguntas: totalPerguntas,
       acertos: 0,
       percentual: 0,
       nivel_resultado: 'Em andamento',
@@ -64,7 +64,7 @@ async function maestriaSalvarResposta(pergunta, respostaUsuario, acertou) {
   await client.from('respostas_maestria').insert({
     teste_id: maestriaState.testeId,
     usuario_id: appState.perfil.id,
-    pergunta_codigo: pergunta.codigo,
+    pergunta_codigo: String(pergunta.codigo),
     resposta_usuario: respostaUsuario,
     acertou,
   });
@@ -115,16 +115,21 @@ async function iniciarMaestria() {
     return;
   }
 
-  if (!window.GOLPESWIPE_PERGUNTAS || window.GOLPESWIPE_PERGUNTAS.length < 100) {
+  if (typeof carregarQuestoesEmpresa === 'function') await carregarQuestoesEmpresa();
+  const repertorio = typeof obterRepertorioGolpeSwipe === 'function'
+    ? obterRepertorioGolpeSwipe()
+    : window.GOLPESWIPE_PERGUNTAS;
+
+  if (!repertorio || repertorio.length < 100) {
     showToast('Repertório de 100 perguntas não carregado.', 'error');
     return;
   }
 
-  maestriaState.perguntas = maestriaShuffle(window.GOLPESWIPE_PERGUNTAS).slice(0, 100);
+  maestriaState.perguntas = maestriaShuffle(repertorio).slice(0, 100);
   maestriaState.indice = 0;
   maestriaState.acertos = 0;
   maestriaState.respostas = [];
-  maestriaState.testeId = await maestriaCriarTeste();
+  maestriaState.testeId = await maestriaCriarTeste(maestriaState.perguntas.length);
 
   maestriaRenderizarPergunta();
 }
