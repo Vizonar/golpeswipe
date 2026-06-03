@@ -5,28 +5,46 @@ function formatarPercentual(valor) {
   return `${Math.round(numero)}%`;
 }
 
+function ehTesteCompleto(item) {
+  return item?.tipo === 'Teste de Maestria' || item?.tipo === 'Teste Completo';
+}
+
+function tipoResultadoFormatado(tipo) {
+  return tipo === 'Teste de Maestria' ? 'Teste Completo' : tipo;
+}
+
 function obterResultadosDoFuncionario(email) {
   return resultadosEmpresaCache.filter((item) => item.email === email);
+}
+
+function calcularMedia(lista) {
+  return lista.length
+    ? lista.reduce((sum, item) => sum + Number(item.percentual || 0), 0) / lista.length
+    : 0;
 }
 
 function calcularResumoFuncionario(funcionario) {
   const resultados = obterResultadosDoFuncionario(funcionario.email);
   const treinos = resultados.filter((item) => item.tipo === 'Treino');
-  const maestrias = resultados.filter((item) => item.tipo === 'Teste de Maestria');
-  const melhorMaestria = maestrias.length
-    ? Math.max(...maestrias.map((item) => Number(item.percentual || 0)))
+  const testes = resultados.filter(ehTesteCompleto);
+  const melhorTeste = testes.length
+    ? Math.max(...testes.map((item) => Number(item.percentual || 0)))
     : 0;
-  const mediaGeral = resultados.length
-    ? resultados.reduce((sum, item) => sum + Number(item.percentual || 0), 0) / resultados.length
-    : 0;
+  const mediaTreino = calcularMedia(treinos);
+  const mediaTeste = calcularMedia(testes);
+  const mediaGeral = calcularMedia(resultados);
   const ultimoResultado = resultados[0];
 
   return {
     funcionario,
     resultados,
     treinos,
-    maestrias,
-    melhorMaestria,
+    testes,
+    maestrias: testes,
+    melhorTeste,
+    melhorMaestria: melhorTeste,
+    mediaTreino,
+    mediaTeste,
     mediaGeral,
     ultimoResultado,
   };
@@ -35,33 +53,46 @@ function calcularResumoFuncionario(funcionario) {
 function calcularResumoGeralEmpresa() {
   const funcionarios = funcionariosEmpresaCache.map(calcularResumoFuncionario);
   const funcionariosComResultados = funcionarios.filter((item) => item.resultados.length > 0);
-  const maestrias = resultadosEmpresaCache.filter((item) => item.tipo === 'Teste de Maestria');
+  const testes = resultadosEmpresaCache.filter(ehTesteCompleto);
   const treinos = resultadosEmpresaCache.filter((item) => item.tipo === 'Treino');
-  const mediaEmpresa = resultadosEmpresaCache.length
-    ? resultadosEmpresaCache.reduce((sum, item) => sum + Number(item.percentual || 0), 0) / resultadosEmpresaCache.length
-    : 0;
-  const mediaMaestria = maestrias.length
-    ? maestrias.reduce((sum, item) => sum + Number(item.percentual || 0), 0) / maestrias.length
-    : 0;
+  const mediaTreinos = calcularMedia(treinos);
+  const mediaTeste = calcularMedia(testes);
+  const mediaEmpresa = calcularMedia(resultadosEmpresaCache);
   const melhorFuncionario = funcionarios.length
-    ? [...funcionarios].sort((a, b) => b.melhorMaestria - a.melhorMaestria || b.mediaGeral - a.mediaGeral)[0]
+    ? [...funcionarios].sort((a, b) => b.melhorTeste - a.melhorTeste || b.mediaTeste - a.mediaTeste || b.mediaTreino - a.mediaTreino)[0]
     : null;
-  const funcionariosSemTeste = funcionarios.filter((item) => item.maestrias.length === 0);
+  const funcionariosSemTeste = funcionarios.filter((item) => item.testes.length === 0);
+  const funcionariosSemTreino = funcionarios.filter((item) => item.treinos.length === 0);
+  const funcionariosBaixoTeste = funcionarios.filter((item) => item.testes.length > 0 && item.melhorTeste < 70);
+  const funcionariosAtencaoTeste = funcionarios.filter((item) => item.testes.length > 0 && item.melhorTeste >= 70 && item.melhorTeste < 85);
+  const funcionariosExcelentes = funcionarios.filter((item) => item.testes.length > 0 && item.melhorTeste >= 95);
+  const todosAcima95 = funcionarios.length > 0 && funcionarios.every((item) => item.testes.length > 0 && item.melhorTeste >= 95);
+  const quedaTesteAposTreino = funcionarios.filter((item) => item.treinos.length > 0 && item.testes.length > 0 && item.mediaTreino - item.mediaTeste >= 15);
 
   return {
     funcionarios,
     funcionariosComResultados,
-    maestrias,
+    testes,
+    maestrias: testes,
     treinos,
     mediaEmpresa,
-    mediaMaestria,
+    mediaTreinos,
+    mediaTeste,
+    mediaMaestria: mediaTeste,
     melhorFuncionario,
     funcionariosSemTeste,
+    funcionariosSemTreino,
+    funcionariosBaixoTeste,
+    funcionariosAtencaoTeste,
+    funcionariosExcelentes,
+    todosAcima95,
+    quedaTesteAposTreino,
   };
 }
 
 function nivelRelatorio(percentual) {
   const valor = Number(percentual || 0);
+  if (valor >= 95) return 'Excelência comprovada';
   if (valor >= 85) return 'Excelente domínio';
   if (valor >= 70) return 'Bom conhecimento';
   if (valor >= 50) return 'Atenção necessária';
@@ -82,7 +113,7 @@ function gerarTabelaResultadosRelatorio(resultados) {
         <tbody>
           ${resultados.map((item) => `
             <tr>
-              <td>${item.tipo}</td>
+              <td>${tipoResultadoFormatado(item.tipo)}</td>
               <td>${item.acertos}/${item.total_perguntas}</td>
               <td>${formatarPercentual(item.percentual)}</td>
               <td>${item.nivel_resultado || nivelRelatorio(item.percentual)}</td>
@@ -133,23 +164,89 @@ function fecharModalRelatorio() {
   document.querySelector('#relatorio-final-modal')?.classList.remove('active');
 }
 
+function nomes(lista) {
+  return lista.map((item) => item.funcionario?.nome || item.nome).filter(Boolean).join(', ') || 'Nenhum';
+}
+
+function gerarAnaliseFocosEmpresa(resumo) {
+  if (resumo.todosAcima95) {
+    return `
+      <div class="info-box">
+        <h3>Congratulações à equipe</h3>
+        <p>Todos os funcionários cadastrados realizaram o Teste Completo e alcançaram pontuação igual ou superior a 95%. Esse resultado indica alto nível de atenção aos sinais de golpe, boa assimilação dos cenários simulados e uma cultura preventiva bem consolidada.</p>
+        <p>Recomenda-se manter ciclos periódicos de atualização, adicionando novas questões da empresa para simular golpes recentes e situações específicas do cotidiano interno.</p>
+      </div>
+    `;
+  }
+
+  const pontos = [];
+
+  if (resumo.funcionariosSemTeste.length) {
+    pontos.push(`<li><strong>Aplicação do Teste Completo:</strong> ${resumo.funcionariosSemTeste.length} funcionário(s) ainda não realizou(aram) o Teste Completo. A empresa deve priorizar a conclusão da avaliação para obter uma visão real do nível da equipe.</li>`);
+  }
+
+  if (resumo.funcionariosSemTreino.length) {
+    pontos.push(`<li><strong>Engajamento em treinamento:</strong> ${resumo.funcionariosSemTreino.length} funcionário(s) ainda não realizou(aram) treinos. Antes de novas avaliações, é recomendado incentivar a prática para reforçar o aprendizado.</li>`);
+  }
+
+  if (resumo.funcionariosBaixoTeste.length) {
+    pontos.push(`<li><strong>Reforço urgente:</strong> ${nomes(resumo.funcionariosBaixoTeste)} apresentou(aram) resultado abaixo de 70% no Teste Completo. Esse grupo deve revisar os feedbacks, repetir treinos e receber orientação sobre sinais de urgência, links suspeitos, Pix indevido e confirmação por canais oficiais.</li>`);
+  }
+
+  if (resumo.funcionariosAtencaoTeste.length) {
+    pontos.push(`<li><strong>Aprimoramento direcionado:</strong> ${nomes(resumo.funcionariosAtencaoTeste)} ficou(aram) entre 70% e 84%. O desempenho é razoável, mas ainda há margem para reduzir erros em situações mais ambíguas.</li>`);
+  }
+
+  if (resumo.quedaTesteAposTreino.length) {
+    pontos.push(`<li><strong>Diferença entre treino e avaliação:</strong> ${nomes(resumo.quedaTesteAposTreino)} teve(iveram) média de treino consideravelmente maior que o resultado do Teste Completo. Isso pode indicar que o feedback imediato ajuda no treino, mas o conhecimento ainda precisa ser fixado para decisões sem ajuda.</li>`);
+  }
+
+  if (resumo.mediaTeste < 70 && resumo.testes.length) {
+    pontos.push('<li><strong>Risco coletivo:</strong> a média do Teste Completo ficou abaixo de 70%. A empresa deve reforçar campanhas internas, simulações de golpes e orientações práticas antes de uma nova rodada de avaliação.</li>');
+  } else if (resumo.mediaTeste >= 85 && resumo.testes.length) {
+    pontos.push('<li><strong>Bom nível geral:</strong> a média do Teste Completo está em faixa alta. O foco agora deve ser manutenção, atualização dos cenários e acompanhamento dos poucos pontos de erro restantes.</li>');
+  }
+
+  if (!pontos.length) {
+    pontos.push('<li><strong>Acompanhamento contínuo:</strong> os dados ainda são limitados. Recomenda-se manter ciclos de treino e Teste Completo para gerar histórico suficiente e identificar padrões com mais segurança.</li>');
+  }
+
+  return `
+    <ul>
+      ${pontos.join('')}
+    </ul>
+  `;
+}
+
 function gerarRelatorioGeralEmpresa() {
   const resumo = calcularResumoGeralEmpresa();
   const empresa = appState?.empresa?.nome || 'Empresa';
   const dataGeracao = new Date().toLocaleString('pt-BR');
 
-  const rankingInterno = [...resumo.funcionarios]
-    .sort((a, b) => b.melhorMaestria - a.melhorMaestria || b.mediaGeral - a.mediaGeral)
+  const rankingTreinos = [...resumo.funcionarios]
+    .sort((a, b) => b.mediaTreino - a.mediaTreino || b.treinos.length - a.treinos.length)
     .map((item, index) => `
       <tr>
         <td>${index + 1}</td>
         <td>${item.funcionario.nome}</td>
         <td>${item.funcionario.email}</td>
         <td>${item.treinos.length}</td>
-        <td>${item.maestrias.length}</td>
-        <td>${formatarPercentual(item.melhorMaestria)}</td>
-        <td>${formatarPercentual(item.mediaGeral)}</td>
-        <td>${nivelRelatorio(item.melhorMaestria || item.mediaGeral)}</td>
+        <td>${formatarPercentual(item.mediaTreino)}</td>
+        <td>${item.treinos.length ? 'Participou dos treinos' : 'Sem treino registrado'}</td>
+      </tr>
+    `).join('');
+
+  const rankingTestes = [...resumo.funcionarios]
+    .sort((a, b) => b.melhorTeste - a.melhorTeste || b.mediaTeste - a.mediaTeste)
+    .map((item, index) => `
+      <tr>
+        <td>${index + 1}</td>
+        <td>${item.funcionario.nome}</td>
+        <td>${item.funcionario.email}</td>
+        <td>${item.testes.length}</td>
+        <td>${formatarPercentual(item.melhorTeste)}</td>
+        <td>${formatarPercentual(item.mediaTeste)}</td>
+        <td>${nivelRelatorio(item.melhorTeste || item.mediaTeste)}</td>
       </tr>
     `).join('');
 
@@ -163,27 +260,41 @@ function gerarRelatorioGeralEmpresa() {
         <div><strong>${funcionariosEmpresaCache.length}</strong><span>Funcionários cadastrados</span></div>
         <div><strong>${resumo.funcionariosComResultados.length}</strong><span>Funcionários com resultados</span></div>
         <div><strong>${resumo.treinos.length}</strong><span>Treinos finalizados</span></div>
-        <div><strong>${resumo.maestrias.length}</strong><span>Testes de Maestria</span></div>
-        <div><strong>${formatarPercentual(resumo.mediaEmpresa)}</strong><span>Média geral</span></div>
-        <div><strong>${formatarPercentual(resumo.mediaMaestria)}</strong><span>Média na maestria</span></div>
+        <div><strong>${resumo.testes.length}</strong><span>Testes Completos finalizados</span></div>
+        <div><strong>${formatarPercentual(resumo.mediaTreinos)}</strong><span>Média dos treinos</span></div>
+        <div><strong>${formatarPercentual(resumo.mediaTeste)}</strong><span>Média do Teste Completo</span></div>
       </div>
 
-      <h2>Resumo interpretativo</h2>
-      <p>A empresa possui ${funcionariosEmpresaCache.length} funcionário(s) cadastrado(s), com ${resumo.funcionariosComResultados.length} funcionário(s) apresentando ao menos um resultado registrado. Foram identificados ${resumo.treinos.length} treino(s) finalizado(s) e ${resumo.maestrias.length} Teste(s) de Maestria finalizado(s).</p>
-      <p>A média geral registrada foi de <strong>${formatarPercentual(resumo.mediaEmpresa)}</strong>. Considerando apenas Testes de Maestria, a média foi de <strong>${formatarPercentual(resumo.mediaMaestria)}</strong>.</p>
-      <p><strong>Melhor desempenho:</strong> ${resumo.melhorFuncionario?.funcionario?.nome || 'Ainda não disponível'} ${resumo.melhorFuncionario ? `com melhor maestria de ${formatarPercentual(resumo.melhorFuncionario.melhorMaestria)}.` : ''}</p>
-      <p><strong>Funcionários sem Teste de Maestria:</strong> ${resumo.funcionariosSemTeste.length}.</p>
+      <h2>Resumo executivo</h2>
+      <p>A empresa possui <strong>${funcionariosEmpresaCache.length}</strong> funcionário(s) cadastrado(s). Desses, <strong>${resumo.funcionariosComResultados.length}</strong> apresentam ao menos um resultado registrado na plataforma.</p>
+      <p>Foram finalizados <strong>${resumo.treinos.length}</strong> treino(s) e <strong>${resumo.testes.length}</strong> Teste(s) Completo(s). Os treinos indicam o nível de prática e evolução durante o aprendizado, enquanto o Teste Completo representa a avaliação final sem feedback imediato.</p>
+      <p><strong>Melhor desempenho no Teste Completo:</strong> ${resumo.melhorFuncionario?.funcionario?.nome || 'Ainda não disponível'} ${resumo.melhorFuncionario ? `com melhor pontuação de ${formatarPercentual(resumo.melhorFuncionario.melhorTeste)}.` : ''}</p>
 
-      <h2>Ranking consolidado dos funcionários</h2>
+      <h2>1. Desempenho nos treinos</h2>
+      <p>Esta seção mostra o empenho dos funcionários durante a etapa de aprendizagem. A média dos treinos foi de <strong>${formatarPercentual(resumo.mediaTreinos)}</strong>. Esse dado deve ser analisado separadamente do teste final, pois o treino possui feedback imediato e tem foco educativo.</p>
       <div class="table-wrap">
         <table class="ranking-table">
-          <thead><tr><th>#</th><th>Funcionário</th><th>E-mail</th><th>Treinos</th><th>Maestrias</th><th>Melhor maestria</th><th>Média geral</th><th>Situação</th></tr></thead>
-          <tbody>${rankingInterno || '<tr><td colspan="8">Nenhum funcionário cadastrado.</td></tr>'}</tbody>
+          <thead><tr><th>#</th><th>Funcionário</th><th>E-mail</th><th>Treinos</th><th>Média nos treinos</th><th>Observação</th></tr></thead>
+          <tbody>${rankingTreinos || '<tr><td colspan="6">Nenhum treino registrado.</td></tr>'}</tbody>
         </table>
       </div>
 
-      <h2>Recomendação para a empresa</h2>
-      <p>Funcionários sem Teste de Maestria ou com desempenho abaixo de 70% devem ser incentivados a realizar novos treinos antes de repetir a avaliação. O acompanhamento periódico permite identificar pontos de atenção e melhorar a prevenção contra golpes digitais no ambiente de trabalho.</p>
+      <h2>2. Resultado do Teste Completo</h2>
+      <p>Esta seção representa o resultado avaliativo principal. Diferentemente do treino, o Teste Completo não apresenta feedback imediato a cada questão, permitindo verificar se o funcionário consegue identificar golpes e situações seguras de forma independente.</p>
+      <div class="table-wrap">
+        <table class="ranking-table">
+          <thead><tr><th>#</th><th>Funcionário</th><th>E-mail</th><th>Testes</th><th>Melhor resultado</th><th>Média no teste</th><th>Situação</th></tr></thead>
+          <tbody>${rankingTestes || '<tr><td colspan="7">Nenhum Teste Completo registrado.</td></tr>'}</tbody>
+        </table>
+      </div>
+
+      <h2>3. Pontos de atenção para a empresa</h2>
+      ${gerarAnaliseFocosEmpresa(resumo)}
+
+      <h2>4. Recomendações práticas</h2>
+      <p>Recomenda-se que a empresa utilize os resultados para organizar ações simples e periódicas de prevenção. Funcionários sem treino devem iniciar pelo modo Treino Rápido. Funcionários sem Teste Completo devem realizar a avaliação para que a gestão tenha uma medida comparável de desempenho.</p>
+      <p>Para funcionários abaixo de 70%, o foco deve ser reforçar sinais clássicos de engenharia social: urgência exagerada, pedidos de Pix, links enviados por canais externos, compartilhamento de códigos, anexos suspeitos e confirmação de identidade por outro canal.</p>
+      <p>Para funcionários entre 70% e 84%, recomenda-se trabalhar cenários mais ambíguos, pois esse grupo já demonstra conhecimento básico, mas ainda pode errar situações que parecem legítimas. Para pontuações acima de 85%, a recomendação é manter reciclagens periódicas e adicionar questões personalizadas com exemplos reais do cotidiano da empresa.</p>
     </section>
   `;
 
@@ -200,7 +311,7 @@ function gerarRelatorioFuncionario(email) {
   const resumo = calcularResumoFuncionario(funcionario);
   const empresa = appState?.empresa?.nome || 'Empresa';
   const dataGeracao = new Date().toLocaleString('pt-BR');
-  const percentualBase = resumo.melhorMaestria || resumo.mediaGeral;
+  const percentualBase = resumo.melhorTeste || resumo.mediaTeste || resumo.mediaTreino;
 
   const conteudo = `
     <section class="report-document">
@@ -212,23 +323,25 @@ function gerarRelatorioFuncionario(email) {
 
       <div class="report-summary-grid">
         <div><strong>${resumo.treinos.length}</strong><span>Treinos finalizados</span></div>
-        <div><strong>${resumo.maestrias.length}</strong><span>Testes de Maestria</span></div>
-        <div><strong>${formatarPercentual(resumo.mediaGeral)}</strong><span>Média geral</span></div>
-        <div><strong>${formatarPercentual(resumo.melhorMaestria)}</strong><span>Melhor maestria</span></div>
+        <div><strong>${resumo.testes.length}</strong><span>Testes Completos</span></div>
+        <div><strong>${formatarPercentual(resumo.mediaTreino)}</strong><span>Média nos treinos</span></div>
+        <div><strong>${formatarPercentual(resumo.melhorTeste)}</strong><span>Melhor Teste Completo</span></div>
       </div>
 
       <h2>Análise do desempenho</h2>
-      <p>O funcionário possui ${resumo.resultados.length} resultado(s) registrado(s), sendo ${resumo.treinos.length} treino(s) e ${resumo.maestrias.length} Teste(s) de Maestria.</p>
-      <p>A melhor pontuação em Teste de Maestria foi de <strong>${formatarPercentual(resumo.melhorMaestria)}</strong>. A média geral considerando todos os registros é de <strong>${formatarPercentual(resumo.mediaGeral)}</strong>.</p>
+      <p>O funcionário possui ${resumo.resultados.length} resultado(s) registrado(s), sendo ${resumo.treinos.length} treino(s) e ${resumo.testes.length} Teste(s) Completo(s).</p>
+      <p>A média nos treinos é de <strong>${formatarPercentual(resumo.mediaTreino)}</strong>. A melhor pontuação no Teste Completo foi de <strong>${formatarPercentual(resumo.melhorTeste)}</strong>.</p>
       <p><strong>Situação atual:</strong> ${nivelRelatorio(percentualBase)}.</p>
 
       <h2>Histórico de resultados</h2>
       ${gerarTabelaResultadosRelatorio(resumo.resultados)}
 
       <h2>Recomendação individual</h2>
-      <p>${percentualBase >= 70
-        ? 'O funcionário apresenta desempenho satisfatório. Recomenda-se manter a prática periódica para reforçar a identificação de golpes digitais.'
-        : 'O funcionário deve realizar novos treinos e revisar os feedbacks dos cenários, principalmente antes de repetir o Teste de Maestria.'}</p>
+      <p>${percentualBase >= 95
+        ? 'Desempenho excelente. Recomenda-se manter reciclagens periódicas e usar o funcionário como referência positiva em campanhas internas.'
+        : percentualBase >= 70
+          ? 'O funcionário apresenta desempenho satisfatório. Recomenda-se manter a prática periódica e revisar os cenários em que ainda houve erro.'
+          : 'O funcionário deve realizar novos treinos e revisar os feedbacks dos cenários antes de repetir o Teste Completo.'}</p>
     </section>
   `;
 
@@ -241,17 +354,18 @@ function baixarRelatorioGeralCsv() {
     return;
   }
 
-  const cabecalho = ['Funcionário', 'E-mail', 'Treinos finalizados', 'Testes de Maestria', 'Melhor maestria', 'Média geral', 'Situação'];
+  const cabecalho = ['Funcionário', 'E-mail', 'Treinos finalizados', 'Média nos treinos', 'Testes Completos', 'Melhor teste completo', 'Média no teste', 'Situação'];
   const linhas = funcionariosEmpresaCache.map((funcionario) => {
     const resumo = calcularResumoFuncionario(funcionario);
-    const percentualBase = resumo.melhorMaestria || resumo.mediaGeral;
+    const percentualBase = resumo.melhorTeste || resumo.mediaTeste || resumo.mediaTreino;
     return [
       funcionario.nome,
       funcionario.email,
       resumo.treinos.length,
-      resumo.maestrias.length,
-      formatarPercentual(resumo.melhorMaestria),
-      formatarPercentual(resumo.mediaGeral),
+      formatarPercentual(resumo.mediaTreino),
+      resumo.testes.length,
+      formatarPercentual(resumo.melhorTeste),
+      formatarPercentual(resumo.mediaTeste),
       nivelRelatorio(percentualBase),
     ];
   });
@@ -280,7 +394,7 @@ function renderizarPainelRelatoriosFinais() {
     </div>
     <div class="table-wrap">
       <table class="ranking-table">
-        <thead><tr><th>Funcionário</th><th>E-mail</th><th>Treinos</th><th>Maestrias</th><th>Melhor maestria</th><th>Ação</th></tr></thead>
+        <thead><tr><th>Funcionário</th><th>E-mail</th><th>Treinos</th><th>Testes</th><th>Melhor teste</th><th>Ação</th></tr></thead>
         <tbody id="relatorios-funcionarios-tbody"><tr><td colspan="6">Carregando relatórios...</td></tr></tbody>
       </table>
     </div>
@@ -308,8 +422,8 @@ function atualizarTabelaRelatoriosFinais() {
         <td>${funcionario.nome}</td>
         <td>${funcionario.email}</td>
         <td>${resumo.treinos.length}</td>
-        <td>${resumo.maestrias.length}</td>
-        <td>${formatarPercentual(resumo.melhorMaestria)}</td>
+        <td>${resumo.testes.length}</td>
+        <td>${formatarPercentual(resumo.melhorTeste)}</td>
         <td><button class="btn btn-secondary btn-relatorio-individual" data-email="${funcionario.email}" type="button">Gerar relatório</button></td>
       </tr>
     `;
