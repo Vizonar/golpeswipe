@@ -3,6 +3,10 @@
 
 let questoesEmpresaCache = [];
 
+function getAppStateSeguro() {
+  return typeof appState !== 'undefined' ? appState : window.appState;
+}
+
 function normalizarQuestaoEmpresa(item, index = 0) {
   return {
     codigo: `empresa-${item.id || Date.now()}-${index}`,
@@ -37,8 +41,9 @@ function obterRepertorioGolpeSwipe() {
 }
 
 async function carregarQuestoesEmpresa() {
+  const state = getAppStateSeguro();
   const client = typeof getSupabaseClient === 'function' ? getSupabaseClient() : null;
-  if (!client || !window.appState?.perfil?.empresa_id) return [];
+  if (!client || !state?.perfil?.empresa_id) return [];
 
   const { data, error } = await client.rpc('listar_questoes_empresa');
 
@@ -125,8 +130,10 @@ function fecharQuestoesEmpresa() {
 }
 
 function criarBotaoQuestoesEmpresa() {
+  const state = getAppStateSeguro();
   const dashboard = document.querySelector('#view-dashboard-empresa');
   if (!dashboard || document.querySelector('#btn-abrir-questoes-empresa')) return;
+  if (state?.perfil?.tipo_usuario !== 'admin_empresa') return;
 
   const head = dashboard.querySelector('.dashboard-head');
   if (!head) return;
@@ -164,10 +171,11 @@ function atualizarListaQuestoesEmpresa() {
 
 async function salvarQuestaoEmpresa(event) {
   event.preventDefault();
+  const state = getAppStateSeguro();
   const client = typeof getSupabaseClient === 'function' ? getSupabaseClient() : null;
   const form = event.currentTarget;
 
-  if (!client || window.appState?.perfil?.tipo_usuario !== 'admin_empresa') {
+  if (!client || state?.perfil?.tipo_usuario !== 'admin_empresa') {
     showToast('Apenas administradores da empresa podem cadastrar questões.', 'error');
     return;
   }
@@ -210,9 +218,6 @@ async function salvarQuestaoEmpresa(event) {
 }
 
 function instalarQuestoesEmpresa() {
-  if (window.__GOLPESWIPE_QUESTOES_INSTALADO) return;
-  window.__GOLPESWIPE_QUESTOES_INSTALADO = true;
-
   const tentarInstalar = () => {
     if (typeof preencherMenuPrincipal === 'function' && !preencherMenuPrincipal.__questoesEmpresa) {
       const original = preencherMenuPrincipal;
@@ -235,11 +240,15 @@ function instalarQuestoesEmpresa() {
       wrapperDashboard.__questoesEmpresa = true;
       preencherDashboardEmpresa = wrapperDashboard;
     }
+
+    criarBotaoQuestoesEmpresa();
+    criarModalQuestoesEmpresa();
   };
 
   tentarInstalar();
-  setTimeout(tentarInstalar, 0);
-  setTimeout(tentarInstalar, 300);
+  setTimeout(tentarInstalar, 100);
+  setTimeout(tentarInstalar, 500);
+  setTimeout(tentarInstalar, 1200);
 }
 
 window.obterRepertorioGolpeSwipe = obterRepertorioGolpeSwipe;
@@ -249,11 +258,15 @@ window.fecharQuestoesEmpresa = fecharQuestoesEmpresa;
 window.criarBotaoQuestoesEmpresa = criarBotaoQuestoesEmpresa;
 window.atualizarListaQuestoesEmpresa = atualizarListaQuestoesEmpresa;
 
-document.addEventListener('DOMContentLoaded', () => {
+function iniciarModuloQuestoesEmpresa() {
   instalarQuestoesEmpresa();
-  criarBotaoQuestoesEmpresa();
-  criarModalQuestoesEmpresa();
   document.addEventListener('keydown', (event) => {
     if (event.key === 'Escape') fecharQuestoesEmpresa();
   });
-});
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', iniciarModuloQuestoesEmpresa);
+} else {
+  iniciarModuloQuestoesEmpresa();
+}
