@@ -37,8 +37,8 @@ function obterRepertorioGolpeSwipe() {
 }
 
 async function carregarQuestoesEmpresa() {
-  const client = getSupabaseClient();
-  if (!client || !appState?.perfil?.empresa_id) return [];
+  const client = typeof getSupabaseClient === 'function' ? getSupabaseClient() : null;
+  if (!client || !window.appState?.perfil?.empresa_id) return [];
 
   const { data, error } = await client.rpc('listar_questoes_empresa');
 
@@ -59,7 +59,7 @@ function criarPainelQuestoesEmpresa() {
 
   const card = document.createElement('div');
   card.id = 'questoes-empresa-card';
-  card.className = 'panel-card';
+  card.className = 'panel-card nav-admin';
   card.innerHTML = `
     <div class="panel-head">
       <div>
@@ -111,6 +111,7 @@ function criarPainelQuestoesEmpresa() {
   }
 
   card.querySelector('#form-questao-empresa')?.addEventListener('submit', salvarQuestaoEmpresa);
+  if (typeof atualizarNav === 'function') atualizarNav();
 }
 
 function atualizarListaQuestoesEmpresa() {
@@ -135,10 +136,10 @@ function atualizarListaQuestoesEmpresa() {
 
 async function salvarQuestaoEmpresa(event) {
   event.preventDefault();
-  const client = getSupabaseClient();
+  const client = typeof getSupabaseClient === 'function' ? getSupabaseClient() : null;
   const form = event.currentTarget;
 
-  if (!client || appState?.perfil?.tipo_usuario !== 'admin_empresa') {
+  if (!client || window.appState?.perfil?.tipo_usuario !== 'admin_empresa') {
     showToast('Apenas administradores da empresa podem cadastrar questões.', 'error');
     return;
   }
@@ -158,7 +159,7 @@ async function salvarQuestaoEmpresa(event) {
 
   setLoading(form, true, 'Salvando...');
 
-  const { data, error } = await client.rpc('inserir_questao_empresa', {
+  const { error } = await client.rpc('inserir_questao_empresa', {
     p_categoria: categoria,
     p_titulo: titulo,
     p_cenario: cenario,
@@ -180,19 +181,44 @@ async function salvarQuestaoEmpresa(event) {
   await carregarQuestoesEmpresa();
 }
 
-const preencherMenuPrincipalOriginalQuestoes = preencherMenuPrincipal;
-preencherMenuPrincipal = function preencherMenuPrincipalComQuestoes() {
-  preencherMenuPrincipalOriginalQuestoes();
-  carregarQuestoesEmpresa();
-};
+function instalarQuestoesEmpresa() {
+  if (window.__GOLPESWIPE_QUESTOES_INSTALADO) return;
+  window.__GOLPESWIPE_QUESTOES_INSTALADO = true;
 
-const preencherDashboardEmpresaOriginalQuestoes = preencherDashboardEmpresa;
-preencherDashboardEmpresa = async function preencherDashboardEmpresaComQuestoes() {
-  await preencherDashboardEmpresaOriginalQuestoes();
-  criarPainelQuestoesEmpresa();
-  await carregarQuestoesEmpresa();
-};
+  const tentarInstalar = () => {
+    if (typeof preencherMenuPrincipal === 'function' && !preencherMenuPrincipal.__questoesEmpresa) {
+      const original = preencherMenuPrincipal;
+      const wrapper = function preencherMenuPrincipalComQuestoes() {
+        original();
+        carregarQuestoesEmpresa();
+      };
+      wrapper.__questoesEmpresa = true;
+      preencherMenuPrincipal = wrapper;
+    }
+
+    if (typeof preencherDashboardEmpresa === 'function' && !preencherDashboardEmpresa.__questoesEmpresa) {
+      const originalDashboard = preencherDashboardEmpresa;
+      const wrapperDashboard = async function preencherDashboardEmpresaComQuestoes() {
+        await originalDashboard();
+        criarPainelQuestoesEmpresa();
+        await carregarQuestoesEmpresa();
+      };
+      wrapperDashboard.__questoesEmpresa = true;
+      preencherDashboardEmpresa = wrapperDashboard;
+    }
+  };
+
+  tentarInstalar();
+  setTimeout(tentarInstalar, 0);
+  setTimeout(tentarInstalar, 300);
+}
+
+window.obterRepertorioGolpeSwipe = obterRepertorioGolpeSwipe;
+window.carregarQuestoesEmpresa = carregarQuestoesEmpresa;
+window.criarPainelQuestoesEmpresa = criarPainelQuestoesEmpresa;
+window.atualizarListaQuestoesEmpresa = atualizarListaQuestoesEmpresa;
 
 document.addEventListener('DOMContentLoaded', () => {
+  instalarQuestoesEmpresa();
   criarPainelQuestoesEmpresa();
 });
