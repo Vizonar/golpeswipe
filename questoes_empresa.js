@@ -53,69 +53,97 @@ async function carregarQuestoesEmpresa() {
   return questoesEmpresaCache;
 }
 
-function criarPainelQuestoesEmpresa() {
-  const dashboard = document.querySelector('#view-dashboard-empresa');
-  if (!dashboard || document.querySelector('#questoes-empresa-card')) return;
+function criarModalQuestoesEmpresa() {
+  if (document.querySelector('#questoes-empresa-modal')) return;
 
-  const card = document.createElement('div');
-  card.id = 'questoes-empresa-card';
-  card.className = 'panel-card nav-admin';
-  card.innerHTML = `
-    <div class="panel-head">
-      <div>
-        <h3>Questões da empresa</h3>
-        <p class="muted">Cadastre novos cenários personalizados para aparecerem junto das perguntas fixas.</p>
+  const modal = document.createElement('div');
+  modal.id = 'questoes-empresa-modal';
+  modal.className = 'modal-overlay';
+  modal.innerHTML = `
+    <div class="modal-card questoes-modal" role="dialog" aria-modal="true" aria-labelledby="questoes-empresa-titulo">
+      <div class="modal-head">
+        <div>
+          <p class="eyebrow">Banco de cenários</p>
+          <h2 id="questoes-empresa-titulo">Questões da empresa</h2>
+          <p class="muted">Cadastre novos cenários personalizados para aparecerem junto das perguntas fixas.</p>
+        </div>
+        <button id="btn-fechar-questoes-empresa" class="btn btn-ghost" type="button">Fechar</button>
       </div>
-    </div>
 
-    <form id="form-questao-empresa" class="form two-cols question-company-form">
-      <label>Categoria
-        <input id="questao-categoria" type="text" placeholder="Ex: WhatsApp, Pix, E-mail" required />
-      </label>
-      <label>Resposta correta
-        <select id="questao-resposta" required>
-          <option value="golpe">É golpe</option>
-          <option value="seguro">Não é golpe</option>
-        </select>
-      </label>
-      <label class="span-2">Título
-        <input id="questao-titulo" type="text" placeholder="Ex: Pedido urgente de transferência" required />
-      </label>
-      <label class="span-2">Cenário simulado
-        <textarea id="questao-cenario" rows="4" placeholder="Ex: Você recebe uma mensagem de um fornecedor pedindo alteração urgente da chave Pix..." required></textarea>
-      </label>
-      <label class="span-2">Sinais observados
-        <textarea id="questao-sinais" rows="3" placeholder="Digite um sinal por linha. Ex: Urgência exagerada"></textarea>
-      </label>
-      <label class="span-2">Dica preventiva
-        <textarea id="questao-dica" rows="3" placeholder="Ex: Confirme alterações de pagamento por um canal oficial antes de transferir valores." required></textarea>
-      </label>
-      <button class="btn btn-primary full span-2" type="submit">Adicionar questão</button>
-    </form>
+      <form id="form-questao-empresa" class="form two-cols question-company-form">
+        <label>Categoria
+          <input id="questao-categoria" type="text" placeholder="Ex: WhatsApp, Pix, E-mail" required />
+        </label>
+        <label>Resposta correta
+          <select id="questao-resposta" required>
+            <option value="golpe">É golpe</option>
+            <option value="seguro">Não é golpe</option>
+          </select>
+        </label>
+        <label class="span-2">Título
+          <input id="questao-titulo" type="text" placeholder="Ex: Pedido urgente de transferência" required />
+        </label>
+        <label class="span-2">Cenário simulado
+          <textarea id="questao-cenario" rows="4" placeholder="Ex: Você recebe uma mensagem de um fornecedor pedindo alteração urgente da chave Pix..." required></textarea>
+        </label>
+        <label class="span-2">Sinais observados
+          <textarea id="questao-sinais" rows="3" placeholder="Digite um sinal por linha. Ex: Urgência exagerada"></textarea>
+        </label>
+        <label class="span-2">Dica preventiva
+          <textarea id="questao-dica" rows="3" placeholder="Ex: Confirme alterações de pagamento por um canal oficial antes de transferir valores." required></textarea>
+        </label>
+        <button class="btn btn-primary full span-2" type="submit">Adicionar questão</button>
+      </form>
 
-    <div class="table-wrap question-company-table">
-      <table class="ranking-table">
-        <thead>
-          <tr><th>Categoria</th><th>Título</th><th>Resposta</th><th>Data</th></tr>
-        </thead>
-        <tbody id="questoes-empresa-tbody"><tr><td colspan="4">Nenhuma questão personalizada carregada.</td></tr></tbody>
-      </table>
+      <div class="table-wrap question-company-table">
+        <table class="ranking-table">
+          <thead>
+            <tr><th>Categoria</th><th>Título</th><th>Resposta</th><th>Data</th></tr>
+          </thead>
+          <tbody id="questoes-empresa-tbody"><tr><td colspan="4">Nenhuma questão personalizada carregada.</td></tr></tbody>
+        </table>
+      </div>
     </div>
   `;
 
-  const primeiroPainel = dashboard.querySelector('.panel-card');
-  if (primeiroPainel) {
-    dashboard.insertBefore(card, primeiroPainel);
-  } else {
-    dashboard.appendChild(card);
-  }
+  document.body.appendChild(modal);
+  modal.querySelector('#btn-fechar-questoes-empresa')?.addEventListener('click', fecharQuestoesEmpresa);
+  modal.querySelector('#form-questao-empresa')?.addEventListener('submit', salvarQuestaoEmpresa);
+  modal.addEventListener('click', (event) => {
+    if (event.target === modal) fecharQuestoesEmpresa();
+  });
+}
 
-  card.querySelector('#form-questao-empresa')?.addEventListener('submit', salvarQuestaoEmpresa);
+function abrirQuestoesEmpresa() {
+  criarModalQuestoesEmpresa();
+  carregarQuestoesEmpresa();
+  document.querySelector('#questoes-empresa-modal')?.classList.add('active');
+}
+
+function fecharQuestoesEmpresa() {
+  document.querySelector('#questoes-empresa-modal')?.classList.remove('active');
+}
+
+function criarBotaoQuestoesEmpresa() {
+  const dashboard = document.querySelector('#view-dashboard-empresa');
+  if (!dashboard || document.querySelector('#btn-abrir-questoes-empresa')) return;
+
+  const head = dashboard.querySelector('.dashboard-head');
+  if (!head) return;
+
+  const button = document.createElement('button');
+  button.id = 'btn-abrir-questoes-empresa';
+  button.className = 'btn btn-secondary nav-admin';
+  button.type = 'button';
+  button.textContent = 'Questões da empresa';
+  button.addEventListener('click', abrirQuestoesEmpresa);
+
+  head.appendChild(button);
   if (typeof atualizarNav === 'function') atualizarNav();
 }
 
 function atualizarListaQuestoesEmpresa() {
-  criarPainelQuestoesEmpresa();
+  criarModalQuestoesEmpresa();
   const tbody = document.querySelector('#questoes-empresa-tbody');
   if (!tbody) return;
 
@@ -200,7 +228,8 @@ function instalarQuestoesEmpresa() {
       const originalDashboard = preencherDashboardEmpresa;
       const wrapperDashboard = async function preencherDashboardEmpresaComQuestoes() {
         await originalDashboard();
-        criarPainelQuestoesEmpresa();
+        criarBotaoQuestoesEmpresa();
+        criarModalQuestoesEmpresa();
         await carregarQuestoesEmpresa();
       };
       wrapperDashboard.__questoesEmpresa = true;
@@ -215,10 +244,16 @@ function instalarQuestoesEmpresa() {
 
 window.obterRepertorioGolpeSwipe = obterRepertorioGolpeSwipe;
 window.carregarQuestoesEmpresa = carregarQuestoesEmpresa;
-window.criarPainelQuestoesEmpresa = criarPainelQuestoesEmpresa;
+window.abrirQuestoesEmpresa = abrirQuestoesEmpresa;
+window.fecharQuestoesEmpresa = fecharQuestoesEmpresa;
+window.criarBotaoQuestoesEmpresa = criarBotaoQuestoesEmpresa;
 window.atualizarListaQuestoesEmpresa = atualizarListaQuestoesEmpresa;
 
 document.addEventListener('DOMContentLoaded', () => {
   instalarQuestoesEmpresa();
-  criarPainelQuestoesEmpresa();
+  criarBotaoQuestoesEmpresa();
+  criarModalQuestoesEmpresa();
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') fecharQuestoesEmpresa();
+  });
 });
